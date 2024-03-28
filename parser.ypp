@@ -33,20 +33,21 @@
 
 %%
 
-Program : Statements { output::endScope(); table_stack.removeTopTable(); }
+Program : Statements { table_stack.removeTopTable(); }
         ;
 
 Statements : Statement {}
            | Statements Statement {}
            ;
 
-Statement : LBRACE { table_stack.addNewTable(); } Statements RBRACE { output::endScope(); table_stack.removeTopTable(); }
+Statement : LBRACE { table_stack.addNewTable(); } Statements RBRACE { table_stack.removeTopTable(); }
           | Type ID SC {
                 if (table_stack.entryExists($2->text)) {
                     output::errorDef(yylineno, $2->text);
                     exit(1);
                 }
-                table_stack.addToTopTable(Entry($2->text, $1->text, generateIdCode()));
+                std::string var = generateDeclareVar("0");
+                table_stack.addToTopTable(Entry($2->text, $1->text, var));
             }
           | Type ID ASSIGN Exp SC {
                 Exp* exp = dynamic_cast<Exp*>($4);
@@ -69,18 +70,20 @@ Statement : LBRACE { table_stack.addNewTable(); } Statements RBRACE { output::en
                     output::errorMismatch(yylineno);
                     exit(1);
                 }
-
-                table_stack.addToTopTable(Entry($2->text, $1->text, generateIdCode(to_string(exp->val)) ,exp->val));
-
-
+                std::string expVar = handleExpVar(exp);
+                std::string Var = generateDeclareVar(expVar);
+                table_stack.addToTopTable(Entry($2->text, $1->text, Var ,exp->val));
             }
           | ID ASSIGN Exp SC {
                 Exp* exp = dynamic_cast<Exp*>($3);
+
                 if ((!exp->is_const && !table_stack.entryExists(exp->text))) {
                     output::errorUndef(yylineno, exp->text);
                     exit(1);
                 }
-                Entry entry("", "", 0);
+                table_stack.getEntry($1->text);
+
+                Entry entry("", "", "");
                 if (table_stack.entryExists($1->text)) {
                     entry = table_stack.getEntry($1->text);
                 } else {
@@ -94,16 +97,23 @@ Statement : LBRACE { table_stack.addNewTable(); } Statements RBRACE { output::en
                 }
 
                 if (entry.type != exp->type && !(entry.type == "INT" && exp->type == "BYTE")) {
-
                     output::errorMismatch(yylineno);
                     exit(1);
                 }
-                table_stack.entryChangeVal($1->text, exp->val, generateIdCode(to_string(exp->val)));
+
+                std::string source = handleExpVar(exp);
+
+                std::string target = table_stack.getEntry($1->text).var;
+
+                buffer.emit("store i32 " + source + ", i32* " + target);
+
+
+                table_stack.entryChangeVal($1->text, exp->val);
             }
           | Call SC {}
           | RETURN SC {}
           | IF LPAREN M1 RPAREN Statement M2
-          | IF LPAREN M1 RPAREN Statement M2 ELSE { table_stack.addNewTable(); } Statement {output::endScope(); table_stack.removeTopTable(); }
+          | IF LPAREN M1 RPAREN Statement M2 ELSE { table_stack.addNewTable(); } Statement { table_stack.removeTopTable(); }
           | WHILE LPAREN Exp RPAREN {
                 Exp* exp = dynamic_cast<Exp*>($3);
                 if ((!exp->is_const && !table_stack.entryExists(exp->text))) {
@@ -116,7 +126,7 @@ Statement : LBRACE { table_stack.addNewTable(); } Statements RBRACE { output::en
                 }
                 table_stack.addNewTable();
                 table_stack.addToTopTable(Entry("WHILE", "WHILE", "t0"), true);
-            } Statement {output::endScope(); table_stack.removeTopTable(); }
+            } Statement {table_stack.removeTopTable(); }
           | BREAK SC { if (!table_stack.entryExists("WHILE")) { output::errorUnexpectedBreak(yylineno); exit(1); } }
           | CONTINUE SC { if (!table_stack.entryExists("WHILE")) { output::errorUnexpectedContinue(yylineno); exit(1); } }
           | SC {output::errorSyn(yylineno); exit(1);}
@@ -129,7 +139,8 @@ Call : ID LPAREN Exp RPAREN {
                 exit(1);
             }
             std::string type = verifyFunc($1->text, exp->type, yylineno);
-            generateFuncUsageCode($1->text, exp->var);
+            std::string var = handleExpVar(exp);
+            generateFuncUsageCode($1->text, var);
             $$ = new Call("", type, "",0, true);
         }
      ;
@@ -160,7 +171,7 @@ Exp : LPAREN Exp RPAREN {
             std::string type = verifyBinop(exp1->type, exp2->type, yylineno);
             int val = calcBinop(exp1->type, exp2->type, exp1->val, exp2->val, $2->text, yylineno);
             $$ = new Exp("", type, "" , val, true);
-            generateBinopCode(dynamic_cast<Exp*>($$), *exp1, *exp2, $2->text);
+            generateBinopCode(dynamic_cast<Exp*>($$), handleExpVar(exp1), handleExpVar(exp2), $2->text);
         }
     | Exp BINOP_ADD Exp {
             Exp* exp1 = dynamic_cast<Exp*>($1);
@@ -176,7 +187,7 @@ Exp : LPAREN Exp RPAREN {
             std::string type = verifyBinop(exp1->type, exp2->type, yylineno);
             int val = calcBinop(exp1->type, exp2->type, exp1->val, exp2->val, $2->text, yylineno);
             $$ = new Exp("", type, "", val, true);
-            generateBinopCode(dynamic_cast<Exp*>($$), *exp1, *exp2, $2->text);
+            generateBinopCode(dynamic_cast<Exp*>($$), handleExpVar(exp1), handleExpVar(exp2), $2->text);
         }
     | ID {
         if (table_stack.entryExists($1->text)) {
@@ -195,15 +206,9 @@ Exp : LPAREN Exp RPAREN {
         generateNumCode(dynamic_cast<Exp*>($$));
         }
     | NUM B {
-        int value = std::stoi($1->text);
-         $$ = new Exp($1->text, "BYTE","", value, true);
-
-         if (value > 255) {
-            std::cout << value << std::endl;
-            output::errorByteTooLarge(yylineno, $1->text);
-            exit(1);
-            }
-        generateNumCode(dynamic_cast<Exp*>($$));
+        int value = std::stoi($1->text) & 255;
+        $$ = new Exp($1->text, "BYTE","", value, true);
+        generateNumByteCode(dynamic_cast<Exp*>($$));
         }
     | STRING { $$ = new Exp("", "STRING", "", 0, true); }
     | TRUE { $$ = new Exp("", "BOOL", "",1, true); }
@@ -295,16 +300,21 @@ Exp : LPAREN Exp RPAREN {
         }
     | LPAREN Type RPAREN Exp {
             Exp* exp = dynamic_cast<Exp*>($4);
+            int val = exp->val;
             if (!exp->is_const && !table_stack.entryExists(exp->text)) {
                 output::errorUndef(yylineno, exp->text);
                 exit(1);
             }
             verifyNumeric($2->text, exp->type, yylineno);
             if ($2->text == "BYTE" && exp->val > 255) {
-                output::errorByteTooLarge(yylineno, std::to_string(exp->val));
-                exit(1);
+                val = val & 255;
             }
-            $$ = new Exp("", $2->text,"", exp->val, true);
+            $$ = new Exp("", $2->text,"", val, true);
+
+            if ($2->text == "BYTE")
+                generateNumByteCode(exp);
+            else
+                generateNumCode(exp);
         }
     ;
 
@@ -323,7 +333,7 @@ M1 : Exp    {
             }
    ;
 
-M2 : { output::endScope(); table_stack.removeTopTable(); }
+M2 : { table_stack.removeTopTable(); }
    ;
 
 %%

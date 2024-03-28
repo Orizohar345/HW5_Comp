@@ -38,15 +38,13 @@ void TablesStack::removeTopTable() {
         for (const auto& entry : topTable) {
             if (entry.type == "WHILE")
                 continue;
-
-            output::printID(entry.name, entry.offset, entry.type);
             if (!offsets_stack.empty())
                 offsets_stack.pop_back();
         }
     symbol_table.pop_back();
 }
 
-void TablesStack::addToTopTable(Entry&& entry, bool is_func) {
+void TablesStack::addToTopTable(Entry entry, bool is_func) {
 
     if (empty()) {
         throw std::runtime_error("Stack is empty");
@@ -83,13 +81,12 @@ Entry TablesStack::getEntry(const std::string& name) const {
     throw std::runtime_error("Entry not found in the stack");
 }
 
-void TablesStack::entryChangeVal(const std::string& name, int val, std::string var) {
+void TablesStack::entryChangeVal(const std::string& name, int val) {
     // Iterate through tables from top to bottom
     for (auto& table : symbol_table) {
         auto it = std::find_if(table.begin(), table.end(), [&name](const Entry& entry) { return entry.name == name; });
         if (it != table.end()) {
             it->val = val; // Return the found Entry
-            it->var = var;
         }
     }
 }

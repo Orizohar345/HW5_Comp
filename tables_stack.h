@@ -50,13 +50,13 @@ public:
     std::vector<Entry>& getTopTable();
 
     // Add Entry to the table in the top of the stack.
-    void addToTopTable(Entry&& entry, bool is_func = false);
+    void addToTopTable(Entry entry, bool is_func = false);
 
     bool entryExists(const std::string& name, bool is_func = false) const;
 
     Entry getEntry(const std::string& name) const;
 
-    void entryChangeVal(const std::string& name, int val, std::string var);
+    void entryChangeVal(const std::string& name, int val);
 };
 
 #endif

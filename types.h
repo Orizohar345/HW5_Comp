@@ -5,6 +5,7 @@
 #include <string>
 #include "hw3_output.hpp"
 #include "bp.hpp"
+#include "tables_stack.h"
 
 class Node {
 public:
@@ -88,10 +89,12 @@ void finalizeResult(Exp* res, const std::string& resultVar, const std::string& o
 std::string determineOperationCode(const std::string& op);
 
 void generateDeclarationCode();
-void generateBinopCode(Exp *res, const Exp &operand1, const Exp &operand2, const string &op);
+void generateBinopCode(Exp *res, std::string operand1, std::string operand2, const std::string& op);
 void generateNumCode(Exp* num);
+void generateNumByteCode(Exp* num);
 std::string generateIdCode(std::string val = "0");
 void generateFuncUsageCode(const std::string& func_name, const std::string& arg);
-
+std::string handleExpVar(Exp* exp);
+std::string generateDeclareVar(const std::string& initialValue = "0");
 
 #endif

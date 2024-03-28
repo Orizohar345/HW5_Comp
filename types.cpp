@@ -2,6 +2,7 @@
 #include "types.h"
 
 extern CodeBuffer buffer;
+extern TablesStack table_stack;
 
 
 void verifyNumeric(std::string type1, std::string type2, int lineno)
@@ -77,7 +78,7 @@ int calcBinop(std::string type1, std::string type2, int val1, int val2, std::str
 }
 
 
-void generateBinopCode(Exp* res, const Exp& operand1, const Exp& operand2, const std::string& op) {
+void generateBinopCode(Exp* res, std::string operand1, std::string operand2, const std::string& op) {
     if (op == "/") {
         // Division operation with zero-check
         std::string labelNoDivZero = buffer.freshLabel();
@@ -87,7 +88,7 @@ void generateBinopCode(Exp* res, const Exp& operand1, const Exp& operand2, const
         std::string divResultVar = buffer.freshVar();  // Prepare variable for division result
 
         // Emit check for divisor being zero
-        buffer.emit(checkZero + " = icmp eq i32 " + operand2.var + ", 0");
+        buffer.emit(checkZero + " = icmp eq i32 " + operand2 + ", 0");
         buffer.emit("br i1 " + checkZero + ", label %" + labelDivZero + ", label %" + labelNoDivZero);
 
         // Division by zero handling
@@ -99,7 +100,7 @@ void generateBinopCode(Exp* res, const Exp& operand1, const Exp& operand2, const
 
         // Valid division
         buffer.emit(labelNoDivZero + ":");
-        buffer.emit(divResultVar + " = sdiv i32 " + operand1.var + ", " + operand2.var);
+        buffer.emit(divResultVar + " = sdiv i32 " + operand1 + ", " + operand2);
         buffer.emit("br label %" + endLabel);
 
         // Converge back with a phi node
@@ -113,7 +114,7 @@ void generateBinopCode(Exp* res, const Exp& operand1, const Exp& operand2, const
         // Handle other binary operations without division by zero check
         std::string operationCode = determineOperationCode(op);
         std::string resultVar = buffer.freshVar();
-        buffer.emit(resultVar + " = " + operationCode + " i32 " + operand1.var + ", " + operand2.var);
+        buffer.emit(resultVar + " = " + operationCode + " i32 " + operand1 + ", " + operand2);
 
         // Proceed with result handling
         finalizeResult(res, resultVar, op);
@@ -146,6 +147,22 @@ void generateNumCode(Exp* num) {
         buffer.emit(num->var + " = add i32 " + to_string(num->val) + ", 0");
 }
 
+void generateNumByteCode(Exp* num) {
+    // First, generate a fresh variable for the initial number
+    num->var = buffer.freshVar();
+    // Emit the LLVM IR code to assign the initial value to the variable
+    buffer.emit(num->var + " = add i32 0, " + to_string(num->val));
+
+    // Now, create a new variable for the result after ensuring it's within the byte range
+    std::string byteResultVar = buffer.freshVar();
+    // Apply bitwise AND with 255 to constrain the value within the byte range
+    buffer.emit(byteResultVar + " = and i32 " + num->var + ", 255");
+
+    // Update num->var to the new variable holding the constrained value
+    num->var = byteResultVar;
+}
+
+
 std::string generateIdCode(std::string val) {
         std::string ret_val = buffer.freshVar();
         buffer.emit(ret_val + " = add i32 " + val + ", 0");
@@ -168,4 +185,37 @@ void generateFuncUsageCode(const std::string& func_name, const std::string& arg)
         // Handle invalid function name
         return;
     }
+}
+
+std::string handleExpVar(Exp* exp) {
+    if (exp->is_const) {
+        // If the expression is a constant, just return its associated variable name
+        return exp->var;
+    } else {
+        // If the expression is not a constant, get the entry from the symbol table
+        Entry entry = table_stack.getEntry(exp->text);
+
+        // Create a fresh variable to hold the loaded value
+        std::string freshVar = buffer.freshVar();
+
+        // Generate the LLVM IR code to load the variable's value from its memory address
+        buffer.emit(freshVar + " = load " + "i32" + ", " + "i32" + "* " + entry.var);
+
+        // Return the name of the fresh variable holding the loaded value
+        return freshVar;
+    }
+}
+
+std::string generateDeclareVar(const std::string& initialValue) {
+    // Generate a fresh variable name for LLVM IR (address of the variable)
+    std::string varAddr = buffer.freshVar();
+
+    // Emit LLVM IR code to allocate space for the variable
+    buffer.emit(varAddr + " = alloca i32");
+
+    // Emit LLVM IR code to store the initial value into this variable
+    buffer.emit("store i32 " + initialValue + ", i32* " + varAddr);
+
+    // Return the address (name) of the variable for further use
+    return varAddr;
 }
