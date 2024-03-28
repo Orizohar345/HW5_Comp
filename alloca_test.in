@@ -1,0 +1,8 @@
+int x;
+printi(x);
+int y = 8;
+printi(y);
+x = 7;
+printi(x);
+y = x;
+printi(y);
