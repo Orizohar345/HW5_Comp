@@ -3,9 +3,9 @@
 TablesStack::TablesStack() {
     symbol_table.push_back(std::vector<Entry>());
     offsets_stack.push_back(0);
-    TablesStack::addToTopTable(Entry("print", output::makeFunctionType("STRING", "VOID"), 0), true);
-    TablesStack::addToTopTable(Entry("printi", output::makeFunctionType("INT", "VOID"), 0), true);
-    TablesStack::addToTopTable(Entry("readi", output::makeFunctionType("INT", "INT"), 0), true);
+    TablesStack::addToTopTable(Entry("print", output::makeFunctionType("STRING", "VOID"), "T0"), true);
+    TablesStack::addToTopTable(Entry("printi", output::makeFunctionType("INT", "VOID"), "T0"), true);
+    TablesStack::addToTopTable(Entry("readi", output::makeFunctionType("INT", "INT"), "T0"), true);
 }
 
 void TablesStack::addNewTable() {
@@ -47,7 +47,7 @@ void TablesStack::removeTopTable() {
 }
 
 void TablesStack::addToTopTable(Entry&& entry, bool is_func) {
-  
+
     if (empty()) {
         throw std::runtime_error("Stack is empty");
     }
@@ -69,7 +69,7 @@ bool TablesStack::entryExists(const std::string& name, bool is_func) const {
             }
         }
     return false;
-    
+
 }
 
 Entry TablesStack::getEntry(const std::string& name) const {
@@ -83,12 +83,13 @@ Entry TablesStack::getEntry(const std::string& name) const {
     throw std::runtime_error("Entry not found in the stack");
 }
 
-void TablesStack::entryChangeVal(const std::string& name, int val) {
+void TablesStack::entryChangeVal(const std::string& name, int val, std::string var) {
     // Iterate through tables from top to bottom
     for (auto& table : symbol_table) {
         auto it = std::find_if(table.begin(), table.end(), [&name](const Entry& entry) { return entry.name == name; });
         if (it != table.end()) {
             it->val = val; // Return the found Entry
+            it->var = var;
         }
     }
 }

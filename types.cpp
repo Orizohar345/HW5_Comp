@@ -55,18 +55,21 @@ std::string verifyFunc(std::string func_id, std::string arg_type, int lineno) {
         exit(1);
 }
 
-int verifyByte(std::string type1, std::string type2, int val1, int val2, std::string operation, int lineno) {
+int calcBinop(std::string type1, std::string type2, int val1, int val2, std::string operation, int lineno) {
         int res;
 
-        if (operation == "MULT")
+        if (operation == "*")
                 res = val1 * val2;
-        else if (operation == "ADD")
+        else if (operation == "+")
                 res = val1 + val2;
+        else if (operation == "-")
+                res = val1 - val2;
+        else if (operation == "/")
+                res = val1 / val2;
 
         if (type1 == "BYTE" && type2 == "BYTE") {
                 if (res > 255) {
-                        output::errorByteTooLarge(lineno, std::to_string(res));
-                        exit(1);
+                        res = res & 255;
                 }
         }
 
@@ -74,42 +77,95 @@ int verifyByte(std::string type1, std::string type2, int val1, int val2, std::st
 }
 
 
-void generateBinopCode(Exp *res, const Exp &operand1, const Exp &operand2, const string &op) {
-    res->var = buffer.freshVar();
-    std::string code = res->var + " = ";
-    if (op == "+") {
-        code += "add";
-    } else if (op == "-") {
-        code += "sub";
-    } else if (op == "*") {
-        code += "mul";
-    } else {
-        if (res->type == "INT") {
-            code += "sdiv";
-        } else {
-            code += "udiv";
-        }
-    }
+void generateBinopCode(Exp* res, const Exp& operand1, const Exp& operand2, const std::string& op) {
     if (op == "/") {
-        buffer.emit("call void @check_division(i32 " + operand2.var + ")");
-        buffer.emit(code + " i32 " + operand1.var + ", " + operand2.var);
+        // Division operation with zero-check
+        std::string labelNoDivZero = buffer.freshLabel();
+        std::string labelDivZero = buffer.freshLabel();
+        std::string endLabel = buffer.freshLabel();
+        std::string checkZero = buffer.freshVar();
+        std::string divResultVar = buffer.freshVar();  // Prepare variable for division result
+
+        // Emit check for divisor being zero
+        buffer.emit(checkZero + " = icmp eq i32 " + operand2.var + ", 0");
+        buffer.emit("br i1 " + checkZero + ", label %" + labelDivZero + ", label %" + labelNoDivZero);
+
+        // Division by zero handling
+        buffer.emit(labelDivZero + ":");
+        buffer.emit("call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))");
+        // Exit with status code 1
+        buffer.emit("call void @exit(i32 1)");
+        buffer.emit("br label %" + endLabel);
+
+        // Valid division
+        buffer.emit(labelNoDivZero + ":");
+        buffer.emit(divResultVar + " = sdiv i32 " + operand1.var + ", " + operand2.var);
+        buffer.emit("br label %" + endLabel);
+
+        // Converge back with a phi node
+        buffer.emit(endLabel + ":");
+        std::string resultVar = buffer.freshVar();
+        buffer.emit(resultVar + " = phi i32 [ -1, %" + labelDivZero + "], [" + divResultVar + ", %" + labelNoDivZero + "]");
+
+        // Proceed with result handling
+        finalizeResult(res, resultVar, op);
     } else {
-        buffer.emit(code + " i32 " + operand1.var + ", " + operand2.var);
-        if (res->type == "BYTE") {
-            string old_var = res->var;
-            res->reg = buffer.freshVar();
-            buffer.emit(res->val + " = and i32 255, " + old_val);
-        }
+        // Handle other binary operations without division by zero check
+        std::string operationCode = determineOperationCode(op);
+        std::string resultVar = buffer.freshVar();
+        buffer.emit(resultVar + " = " + operationCode + " i32 " + operand1.var + ", " + operand2.var);
+
+        // Proceed with result handling
+        finalizeResult(res, resultVar, op);
     }
 }
+
+void finalizeResult(Exp* res, const std::string& resultVar, const std::string& op) {
+    if (res->type == "BYTE" && op != "/") { // Division already handled in phi
+        std::string byteResultVar = buffer.freshVar();
+        buffer.emit(byteResultVar + " = and i32 " + resultVar + ", 255");
+        res->var = byteResultVar;
+    } else {
+        res->var = resultVar;
+    }
+}
+
+std::string determineOperationCode(const std::string& op) {
+    if (op == "+") return "add";
+    else if (op == "-") return "sub";
+    else if (op == "*") return "mul";
+    // Division is handled separately
+    return "";
+}
+
+
+
 
 void generateNumCode(Exp* num) {
         num->var = buffer.freshVar();
         buffer.emit(num->var + " = add i32 " + to_string(num->val) + ", 0");
 }
 
-std::string generateIdCodeDefault() {
-        ret_val = buffer.freshVar();
-        buffer.emit(ret_val + " = add i32 " + "0" + ", 0");
+std::string generateIdCode(std::string val) {
+        std::string ret_val = buffer.freshVar();
+        buffer.emit(ret_val + " = add i32 " + val + ", 0");
         return ret_val;
+}
+
+void generateFuncUsageCode(const std::string& func_name, const std::string& arg) {
+    // Compare function name to determine which function to call
+    if (func_name == "readi") {
+        // Call readi function with the provided argument
+        buffer.emit("%result = call i32 @readi(i32 " + arg + ")");
+    } else if (func_name == "printi") {
+        // Call printi function with the provided argument
+        buffer.emit("call void @printi(i32 " + arg + ")");
+    } else if (func_name == "print") {
+        // Call print function with the provided argument
+        buffer.emit("call void @print(i8* " + arg + ")");
+    } else {
+        std::cout << func_name << arg << std::endl;
+        // Handle invalid function name
+        return;
+    }
 }

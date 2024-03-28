@@ -13,6 +13,43 @@ CodeBuffer &CodeBuffer::instance() {
 	return inst;
 }
 
+void CodeBuffer::initDeclerations() {
+    // Emit declarations for external functions
+    emit("declare i32 @scanf(i8*, ...)");
+    emit("declare i32 @printf(i8*, ...)");
+    emit("declare void @exit(i32)");
+
+    // Emit global constants for format specifiers
+    emit("@.int_specifier_scan = constant [3 x i8] c\"%d\\00\"");
+    emit("@.int_specifier = constant [4 x i8] c\"%d\\0A\\00\"");
+    emit("@.str_specifier = constant [4 x i8] c\"%s\\0A\\00\"");
+    emit("@.div_zero_error_msg = constant [24 x i8] c\"Error division by zero\\0A\\00\"");
+
+    // Define the readi function
+    emit("define i32 @readi(i32) {");
+    emit("  %ret_val = alloca i32");
+    emit("  %spec_ptr = getelementptr [3 x i8], [3 x i8]* @.int_specifier_scan, i32 0, i32 0");
+    emit("  call i32 (i8*, ...) @scanf(i8* %spec_ptr, i32* %ret_val)");
+    emit("  %val = load i32, i32* %ret_val");
+    emit("  ret i32 %val");
+    emit("}");
+
+    // Define the printi function
+    emit("define void @printi(i32) {");
+    emit("  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.int_specifier, i32 0, i32 0");
+    emit("  call i32 (i8*, ...) @printf(i8* %spec_ptr, i32 %0)");
+    emit("  ret void");
+    emit("}");
+
+    // Define the print function
+    emit("define void @print(i8*) {");
+    emit("  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.str_specifier, i32 0, i32 0");
+    emit("  call i32 (i8*, ...) @printf(i8* %spec_ptr, i8* %0)");
+    emit("  ret void");
+    emit("}");
+}
+
+
 string CodeBuffer::genLabel() {
     std::string label = freshLabel();
     emit(label + ":");
@@ -21,8 +58,14 @@ string CodeBuffer::genLabel() {
 
 string CodeBuffer::freshLabel(){
 	std::stringstream label;
-	label << "label_" << ++labels_num;
+	label << "label_" << labels_num++;
 	return label.str();
+}
+
+string CodeBuffer::freshVar(){
+	std::stringstream var;
+	var << "%var_" << vars_num++;
+	return var.str();
 }
 
 int CodeBuffer::emit(const string &s){
@@ -39,7 +82,7 @@ void CodeBuffer::bpatch(const vector<pair<int,BranchLabelIndex>>& address_list, 
 }
 
 void CodeBuffer::printCodeBuffer(){
-	for (std::vector<string>::const_iterator it = buffer.begin(); it != buffer.end(); ++it) 
+	for (std::vector<string>::const_iterator it = buffer.begin(); it != buffer.end(); ++it)
 	{
 		cout << *it << endl;
     }
@@ -60,7 +103,7 @@ vector<pair<int,BranchLabelIndex>> CodeBuffer::merge(const vector<pair<int,Branc
 }
 
 // ******** Methods to handle the global section ********** //
-void CodeBuffer::emitGlobal(const std::string& dataLine) 
+void CodeBuffer::emitGlobal(const std::string& dataLine)
 {
 	globalDefs.push_back(dataLine);
 }

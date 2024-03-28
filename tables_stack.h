@@ -16,10 +16,10 @@ public:
     int val;
     int offset;
 
-    Entry(const std::string& name, const std::string& type, std::string& var, int val = 0, int offset = 0)
+    Entry(const std::string& name, const std::string& type, std::string var, int val = 0, int offset = 0)
         : name(name), type(type), var(var), val(val), offset(offset) {}
     ~Entry() = default;
-    Entry(const Entry& other) : name(other.name), type(other.type), val(other.val), offset(other.offset) {}
+    Entry(const Entry& other) : name(other.name), type(other.type),  var(other.var), val(other.val), offset(other.offset) {}
 };
 
 class TablesStack {

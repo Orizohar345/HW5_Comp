@@ -56,3 +56,5 @@ void output::errorUnexpectedContinue(int lineno) {
 void output::errorByteTooLarge(int lineno, const string& value) {
     cout << "line " << lineno << ": byte value " << value << " out of range" << endl;
 }
+
+

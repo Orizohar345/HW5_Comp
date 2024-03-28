@@ -55,12 +55,12 @@ public:
     bool is_const;
 
     // Constructor
-    Exp(const std::string& text, const std::string& type, int val, bool is_const)
-        : Node(text), type(type), val(val), is_const(is_const) {}
+    Exp(const std::string& text, const std::string& type, std::string var, int val, bool is_const)
+        : Node(text), type(type), var(var), val(val), is_const(is_const) {}
 
     // Copy constructor
     Exp(const Exp& other)
-        : Node(other), type(other.type), val(other.val), is_const(other.is_const) {}
+        : Node(other), type(other.type), var(other.var), val(other.val), is_const(other.is_const) {}
 
     // Copy assignment operator
     Exp& operator=(const Exp& other) {
@@ -82,11 +82,16 @@ public:
 
 void verifyNumeric(std::string type1, std::string type2, int lineno);
 std::string verifyBinop(std::string type1, std::string type2, int lineno);
-int verifyByte(std::string type1, std::string type2, int val1, int val2, std::string operation, int lineno);
+int calcBinop(std::string type1, std::string type2, int val1, int val2, std::string operation, int lineno);
 std::string verifyFunc(std::string func_id, std::string arg_type, int lineno);
+void finalizeResult(Exp* res, const std::string& resultVar, const std::string& op);
+std::string determineOperationCode(const std::string& op);
 
+void generateDeclarationCode();
 void generateBinopCode(Exp *res, const Exp &operand1, const Exp &operand2, const string &op);
 void generateNumCode(Exp* num);
 std::string generateIdCode(std::string val = "0");
+void generateFuncUsageCode(const std::string& func_name, const std::string& arg);
+
 
 #endif
