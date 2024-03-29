@@ -49,6 +49,16 @@ void CodeBuffer::initDeclerations() {
     emit("}");
 }
 
+void  CodeBuffer::initMain() {
+    emit("define i32 @main() {");
+    stackPtr = "%vars_buffer";
+    emit(stackPtr + " = alloca [50 x i32]");
+}
+
+void  CodeBuffer::finishMain() {
+    emit("ret i32 0");
+    emit("}");
+}
 
 string CodeBuffer::genLabel() {
     std::string label = freshLabel();
@@ -66,6 +76,12 @@ string CodeBuffer::freshVar(){
 	std::stringstream var;
 	var << "%var_" << vars_num++;
 	return var.str();
+}
+
+string CodeBuffer::freshReg(){
+	std::stringstream reg;
+	reg << "%reg_" << vars_num++;
+	return reg.str();
 }
 
 int CodeBuffer::emit(const string &s){

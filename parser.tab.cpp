@@ -546,7 +546,7 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    36,    36,    39,    40,    43,    43,    44,    52,    77,
+       0,    36,    36,    39,    40,    43,    43,    44,    53,    80,
      113,   114,   115,   116,   116,   117,   117,   130,   131,   132,
      135,   147,   148,   149,   152,   160,   176,   192,   199,   203,
      208,   213,   214,   215,   216,   228,   250,   272,   287,   301,
@@ -1208,14 +1208,15 @@ yyreduce:
                     output::errorDef(yylineno, yyvsp[-1]->text);
                     exit(1);
                 }
-                std::string var = generateDeclareVar("0");
-                table_stack.addToTopTable(Entry(yyvsp[-1]->text, yyvsp[-2]->text, var));
+                table_stack.addToTopTable(Entry(yyvsp[-1]->text, yyvsp[-2]->text));
+                std::string var = generateLoad(yyvsp[-1]->text);
+                generateStore("0", var);
             }
-#line 1215 "parser.tab.cpp"
+#line 1216 "parser.tab.cpp"
     break;
 
   case 8: /* Statement: Type ID ASSIGN Exp SC  */
-#line 52 "parser.ypp"
+#line 53 "parser.ypp"
                                   {
                 Exp* exp = dynamic_cast<Exp*>(yyvsp[-1]);
                 if (!exp->is_const && !table_stack.entryExists(exp->text)) {
@@ -1237,15 +1238,17 @@ yyreduce:
                     output::errorMismatch(yylineno);
                     exit(1);
                 }
-                std::string expVar = handleExpVar(exp);
-                std::string Var = generateDeclareVar(expVar);
-                table_stack.addToTopTable(Entry(yyvsp[-3]->text, yyvsp[-4]->text, Var ,exp->val));
+                table_stack.addToTopTable(Entry(yyvsp[-3]->text, yyvsp[-4]->text));
+                std::string src = handleExp(exp);
+                std::string target = generateLoad(yyvsp[-3]->text);
+                generateStore(src, target);
+
             }
-#line 1245 "parser.tab.cpp"
+#line 1248 "parser.tab.cpp"
     break;
 
   case 9: /* Statement: ID ASSIGN Exp SC  */
-#line 77 "parser.ypp"
+#line 80 "parser.ypp"
                              {
                 Exp* exp = dynamic_cast<Exp*>(yyvsp[-1]);
 
@@ -1255,7 +1258,7 @@ yyreduce:
                 }
                 table_stack.getEntry(yyvsp[-3]->text);
 
-                Entry entry("", "", "");
+                Entry entry;
                 if (table_stack.entryExists(yyvsp[-3]->text)) {
                     entry = table_stack.getEntry(yyvsp[-3]->text);
                 } else {
@@ -1273,12 +1276,9 @@ yyreduce:
                     exit(1);
                 }
 
-                std::string source = handleExpVar(exp);
-
-                std::string target = table_stack.getEntry(yyvsp[-3]->text).var;
-
-                buffer.emit("store i32 " + source + ", i32* " + target);
-
+                std::string src = handleExp(exp);
+                std::string target = generateLoad(yyvsp[-3]->text);
+                generateStore(src, target);
 
                 table_stack.entryChangeVal(yyvsp[-3]->text, exp->val);
             }
@@ -1322,7 +1322,7 @@ yyreduce:
                     exit(1);
                 }
                 table_stack.addNewTable();
-                table_stack.addToTopTable(Entry("WHILE", "WHILE", "t0"), true);
+                table_stack.addToTopTable(Entry("WHILE", "WHILE"), true);
             }
 #line 1328 "parser.tab.cpp"
     break;
@@ -1360,7 +1360,7 @@ yyreduce:
                 exit(1);
             }
             std::string type = verifyFunc(yyvsp[-3]->text, exp->type, yylineno);
-            std::string var = handleExpVar(exp);
+            std::string var = handleExp(exp);
             generateFuncUsageCode(yyvsp[-3]->text, var);
             yyval = new Call("", type, "",0, true);
         }
@@ -1393,7 +1393,7 @@ yyreduce:
                 output::errorUndef(yylineno, exp->text);
                 exit(1);
             }
-            yyval = new Exp(exp->text, exp->type, "",exp->val, exp->is_const);
+            yyval = new Exp(exp->text, exp->type, exp->reg, exp->val, exp->is_const);
         }
 #line 1399 "parser.tab.cpp"
     break;
@@ -1414,7 +1414,7 @@ yyreduce:
             std::string type = verifyBinop(exp1->type, exp2->type, yylineno);
             int val = calcBinop(exp1->type, exp2->type, exp1->val, exp2->val, yyvsp[-1]->text, yylineno);
             yyval = new Exp("", type, "" , val, true);
-            generateBinopCode(dynamic_cast<Exp*>(yyval), handleExpVar(exp1), handleExpVar(exp2), yyvsp[-1]->text);
+            generateBinopCode(dynamic_cast<Exp*>(yyval), handleExp(exp1), handleExp(exp2), yyvsp[-1]->text);
         }
 #line 1420 "parser.tab.cpp"
     break;
@@ -1435,7 +1435,7 @@ yyreduce:
             std::string type = verifyBinop(exp1->type, exp2->type, yylineno);
             int val = calcBinop(exp1->type, exp2->type, exp1->val, exp2->val, yyvsp[-1]->text, yylineno);
             yyval = new Exp("", type, "", val, true);
-            generateBinopCode(dynamic_cast<Exp*>(yyval), handleExpVar(exp1), handleExpVar(exp2), yyvsp[-1]->text);
+            generateBinopCode(dynamic_cast<Exp*>(yyval), handleExp(exp1), handleExp(exp2), yyvsp[-1]->text);
         }
 #line 1441 "parser.tab.cpp"
     break;
@@ -1856,10 +1856,9 @@ yyreturnlab:
 int main()
 {
     buffer.initDeclerations();
-    buffer.emit("define i32 @main() {");
+    buffer.initMain();
     int res = yyparse();
-    buffer.emit("ret i32 0");
-    buffer.emit("}");
+    buffer.finishMain();
     buffer.printCodeBuffer();
     return res;
 }

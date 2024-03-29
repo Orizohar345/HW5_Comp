@@ -3,9 +3,9 @@
 TablesStack::TablesStack() {
     symbol_table.push_back(std::vector<Entry>());
     offsets_stack.push_back(0);
-    TablesStack::addToTopTable(Entry("print", output::makeFunctionType("STRING", "VOID"), "T0"), true);
-    TablesStack::addToTopTable(Entry("printi", output::makeFunctionType("INT", "VOID"), "T0"), true);
-    TablesStack::addToTopTable(Entry("readi", output::makeFunctionType("INT", "INT"), "T0"), true);
+    TablesStack::addToTopTable(Entry("print", output::makeFunctionType("STRING", "VOID")), true);
+    TablesStack::addToTopTable(Entry("printi", output::makeFunctionType("INT", "VOID")), true);
+    TablesStack::addToTopTable(Entry("readi", output::makeFunctionType("INT", "INT")), true);
 }
 
 void TablesStack::addNewTable() {

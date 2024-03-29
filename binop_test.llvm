@@ -23,562 +23,563 @@ define void @print(i8*) {
   ret void
 }
 define i32 @main() {
-%var_1 = add i32 2, 0
-%var_2 = add i32 3, 0
-%var_3 = add i32 %var_1, %var_2
-call void @printi(i32 %var_3)
-%var_4 = add i32 10, 0
-%var_5 = add i32 8, 0
-%var_6 = sub i32 %var_4, %var_5
-call void @printi(i32 %var_6)
-%var_7 = add i32 2, 0
-%var_8 = add i32 3, 0
-%var_9 = mul i32 %var_7, %var_8
-call void @printi(i32 %var_9)
-%var_10 = add i32 4, 0
-%var_11 = add i32 2, 0
-%var_12 = icmp eq i32 %var_11, 0
-br i1 %var_12, label %label_2, label %label_1
+%vars_buffer = alloca [50 x i32]
+%reg_1 = add i32 2, 0
+%reg_2 = add i32 3, 0
+%reg_3 = add i32 %reg_1, %reg_2
+call void @printi(i32 %reg_3)
+%reg_4 = add i32 10, 0
+%reg_5 = add i32 8, 0
+%reg_6 = sub i32 %reg_4, %reg_5
+call void @printi(i32 %reg_6)
+%reg_7 = add i32 2, 0
+%reg_8 = add i32 3, 0
+%reg_9 = mul i32 %reg_7, %reg_8
+call void @printi(i32 %reg_9)
+%reg_10 = add i32 4, 0
+%reg_11 = add i32 2, 0
+%reg_12 = icmp eq i32 %reg_11, 0
+br i1 %reg_12, label %label_2, label %label_1
 label_2:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_3
 label_1:
-%var_13 = sdiv i32 %var_10, %var_11
+%reg_13 = sdiv i32 %reg_10, %reg_11
 br label %label_3
 label_3:
-%var_14 = phi i32 [ -1, %label_2], [%var_13, %label_1]
-call void @printi(i32 %var_14)
-%var_15 = add i32 2, 0
-%var_16 = add i32 3, 0
-%var_17 = add i32 5, 0
-%var_18 = mul i32 %var_16, %var_17
-%var_19 = add i32 5, 0
-%var_20 = icmp eq i32 %var_19, 0
-br i1 %var_20, label %label_5, label %label_4
+%reg_14 = phi i32 [ -1, %label_2], [%reg_13, %label_1]
+call void @printi(i32 %reg_14)
+%reg_15 = add i32 2, 0
+%reg_16 = add i32 3, 0
+%reg_17 = add i32 5, 0
+%reg_18 = mul i32 %reg_16, %reg_17
+%reg_19 = add i32 5, 0
+%reg_20 = icmp eq i32 %reg_19, 0
+br i1 %reg_20, label %label_5, label %label_4
 label_5:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_6
 label_4:
-%var_21 = sdiv i32 %var_18, %var_19
+%reg_21 = sdiv i32 %reg_18, %reg_19
 br label %label_6
 label_6:
-%var_22 = phi i32 [ -1, %label_5], [%var_21, %label_4]
-%var_23 = add i32 %var_15, %var_22
-call void @printi(i32 %var_23)
-%var_24 = add i32 2, 0
-%var_25 = add i32 3, 0
-%var_26 = mul i32 %var_24, %var_25
-%var_27 = add i32 5, 0
-%var_28 = add i32 5, 0
-%var_29 = mul i32 %var_27, %var_28
-%var_30 = add i32 %var_26, %var_29
-call void @printi(i32 %var_30)
-%var_31 = add i32 6, 0
-%var_32 = add i32 3, 0
-%var_33 = icmp eq i32 %var_32, 0
-br i1 %var_33, label %label_8, label %label_7
+%reg_22 = phi i32 [ -1, %label_5], [%reg_21, %label_4]
+%reg_23 = add i32 %reg_15, %reg_22
+call void @printi(i32 %reg_23)
+%reg_24 = add i32 2, 0
+%reg_25 = add i32 3, 0
+%reg_26 = mul i32 %reg_24, %reg_25
+%reg_27 = add i32 5, 0
+%reg_28 = add i32 5, 0
+%reg_29 = mul i32 %reg_27, %reg_28
+%reg_30 = add i32 %reg_26, %reg_29
+call void @printi(i32 %reg_30)
+%reg_31 = add i32 6, 0
+%reg_32 = add i32 3, 0
+%reg_33 = icmp eq i32 %reg_32, 0
+br i1 %reg_33, label %label_8, label %label_7
 label_8:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_9
 label_7:
-%var_34 = sdiv i32 %var_31, %var_32
+%reg_34 = sdiv i32 %reg_31, %reg_32
 br label %label_9
 label_9:
-%var_35 = phi i32 [ -1, %label_8], [%var_34, %label_7]
-%var_36 = add i32 200, 0
-%var_37 = add i32 5, 0
-%var_38 = icmp eq i32 %var_37, 0
-br i1 %var_38, label %label_11, label %label_10
+%reg_35 = phi i32 [ -1, %label_8], [%reg_34, %label_7]
+%reg_36 = add i32 200, 0
+%reg_37 = add i32 5, 0
+%reg_38 = icmp eq i32 %reg_37, 0
+br i1 %reg_38, label %label_11, label %label_10
 label_11:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_12
 label_10:
-%var_39 = sdiv i32 %var_36, %var_37
+%reg_39 = sdiv i32 %reg_36, %reg_37
 br label %label_12
 label_12:
-%var_40 = phi i32 [ -1, %label_11], [%var_39, %label_10]
-%var_41 = add i32 %var_35, %var_40
-call void @printi(i32 %var_41)
-%var_42 = add i32 5, 0
-%var_43 = add i32 5, 0
-%var_44 = mul i32 %var_42, %var_43
-%var_45 = add i32 2, 0
-%var_46 = add i32 3, 0
-%var_47 = mul i32 %var_45, %var_46
-%var_48 = sub i32 %var_44, %var_47
-call void @printi(i32 %var_48)
-%var_49 = add i32 300, 0
-%var_50 = add i32 3, 0
-%var_51 = icmp eq i32 %var_50, 0
-br i1 %var_51, label %label_14, label %label_13
+%reg_40 = phi i32 [ -1, %label_11], [%reg_39, %label_10]
+%reg_41 = add i32 %reg_35, %reg_40
+call void @printi(i32 %reg_41)
+%reg_42 = add i32 5, 0
+%reg_43 = add i32 5, 0
+%reg_44 = mul i32 %reg_42, %reg_43
+%reg_45 = add i32 2, 0
+%reg_46 = add i32 3, 0
+%reg_47 = mul i32 %reg_45, %reg_46
+%reg_48 = sub i32 %reg_44, %reg_47
+call void @printi(i32 %reg_48)
+%reg_49 = add i32 300, 0
+%reg_50 = add i32 3, 0
+%reg_51 = icmp eq i32 %reg_50, 0
+br i1 %reg_51, label %label_14, label %label_13
 label_14:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_15
 label_13:
-%var_52 = sdiv i32 %var_49, %var_50
+%reg_52 = sdiv i32 %reg_49, %reg_50
 br label %label_15
 label_15:
-%var_53 = phi i32 [ -1, %label_14], [%var_52, %label_13]
-%var_54 = add i32 200, 0
-%var_55 = add i32 5, 0
-%var_56 = icmp eq i32 %var_55, 0
-br i1 %var_56, label %label_17, label %label_16
+%reg_53 = phi i32 [ -1, %label_14], [%reg_52, %label_13]
+%reg_54 = add i32 200, 0
+%reg_55 = add i32 5, 0
+%reg_56 = icmp eq i32 %reg_55, 0
+br i1 %reg_56, label %label_17, label %label_16
 label_17:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_18
 label_16:
-%var_57 = sdiv i32 %var_54, %var_55
+%reg_57 = sdiv i32 %reg_54, %reg_55
 br label %label_18
 label_18:
-%var_58 = phi i32 [ -1, %label_17], [%var_57, %label_16]
-%var_59 = sub i32 %var_53, %var_58
-call void @printi(i32 %var_59)
-%var_60 = add i32 5, 0
-%var_61 = add i32 5, 0
-%var_62 = mul i32 %var_60, %var_61
-%var_63 = add i32 2, 0
-%var_64 = add i32 3, 0
-%var_65 = mul i32 %var_63, %var_64
-%var_66 = sub i32 %var_62, %var_65
-call void @printi(i32 %var_66)
-%var_67 = add i32 300, 0
-%var_68 = add i32 3, 0
-%var_69 = icmp eq i32 %var_68, 0
-br i1 %var_69, label %label_20, label %label_19
+%reg_58 = phi i32 [ -1, %label_17], [%reg_57, %label_16]
+%reg_59 = sub i32 %reg_53, %reg_58
+call void @printi(i32 %reg_59)
+%reg_60 = add i32 5, 0
+%reg_61 = add i32 5, 0
+%reg_62 = mul i32 %reg_60, %reg_61
+%reg_63 = add i32 2, 0
+%reg_64 = add i32 3, 0
+%reg_65 = mul i32 %reg_63, %reg_64
+%reg_66 = sub i32 %reg_62, %reg_65
+call void @printi(i32 %reg_66)
+%reg_67 = add i32 300, 0
+%reg_68 = add i32 3, 0
+%reg_69 = icmp eq i32 %reg_68, 0
+br i1 %reg_69, label %label_20, label %label_19
 label_20:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_21
 label_19:
-%var_70 = sdiv i32 %var_67, %var_68
+%reg_70 = sdiv i32 %reg_67, %reg_68
 br label %label_21
 label_21:
-%var_71 = phi i32 [ -1, %label_20], [%var_70, %label_19]
-%var_72 = add i32 200, 0
-%var_73 = add i32 5, 0
-%var_74 = icmp eq i32 %var_73, 0
-br i1 %var_74, label %label_23, label %label_22
+%reg_71 = phi i32 [ -1, %label_20], [%reg_70, %label_19]
+%reg_72 = add i32 200, 0
+%reg_73 = add i32 5, 0
+%reg_74 = icmp eq i32 %reg_73, 0
+br i1 %reg_74, label %label_23, label %label_22
 label_23:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_24
 label_22:
-%var_75 = sdiv i32 %var_72, %var_73
+%reg_75 = sdiv i32 %reg_72, %reg_73
 br label %label_24
 label_24:
-%var_76 = phi i32 [ -1, %label_23], [%var_75, %label_22]
-%var_77 = sub i32 %var_71, %var_76
-call void @printi(i32 %var_77)
-%var_78 = add i32 0, 2
-%var_79 = and i32 %var_78, 255
-%var_80 = add i32 0, 3
-%var_81 = and i32 %var_80, 255
-%var_82 = add i32 %var_79, %var_81
-%var_83 = and i32 %var_82, 255
-call void @printi(i32 %var_83)
-%var_84 = add i32 0, 10
-%var_85 = and i32 %var_84, 255
-%var_86 = add i32 0, 8
-%var_87 = and i32 %var_86, 255
-%var_88 = sub i32 %var_85, %var_87
-%var_89 = and i32 %var_88, 255
-call void @printi(i32 %var_89)
-%var_90 = add i32 0, 2
-%var_91 = and i32 %var_90, 255
-%var_92 = add i32 0, 3
-%var_93 = and i32 %var_92, 255
-%var_94 = mul i32 %var_91, %var_93
-%var_95 = and i32 %var_94, 255
-call void @printi(i32 %var_95)
-%var_96 = add i32 0, 4
-%var_97 = and i32 %var_96, 255
-%var_98 = add i32 0, 2
-%var_99 = and i32 %var_98, 255
-%var_100 = icmp eq i32 %var_99, 0
-br i1 %var_100, label %label_26, label %label_25
+%reg_76 = phi i32 [ -1, %label_23], [%reg_75, %label_22]
+%reg_77 = sub i32 %reg_71, %reg_76
+call void @printi(i32 %reg_77)
+%reg_78 = add i32 0, 2
+%reg_79 = and i32 %reg_78, 255
+%reg_80 = add i32 0, 3
+%reg_81 = and i32 %reg_80, 255
+%reg_82 = add i32 %reg_79, %reg_81
+%reg_83 = and i32 %reg_82, 255
+call void @printi(i32 %reg_83)
+%reg_84 = add i32 0, 10
+%reg_85 = and i32 %reg_84, 255
+%reg_86 = add i32 0, 8
+%reg_87 = and i32 %reg_86, 255
+%reg_88 = sub i32 %reg_85, %reg_87
+%reg_89 = and i32 %reg_88, 255
+call void @printi(i32 %reg_89)
+%reg_90 = add i32 0, 2
+%reg_91 = and i32 %reg_90, 255
+%reg_92 = add i32 0, 3
+%reg_93 = and i32 %reg_92, 255
+%reg_94 = mul i32 %reg_91, %reg_93
+%reg_95 = and i32 %reg_94, 255
+call void @printi(i32 %reg_95)
+%reg_96 = add i32 0, 4
+%reg_97 = and i32 %reg_96, 255
+%reg_98 = add i32 0, 2
+%reg_99 = and i32 %reg_98, 255
+%reg_100 = icmp eq i32 %reg_99, 0
+br i1 %reg_100, label %label_26, label %label_25
 label_26:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_27
 label_25:
-%var_101 = sdiv i32 %var_97, %var_99
+%reg_101 = sdiv i32 %reg_97, %reg_99
 br label %label_27
 label_27:
-%var_102 = phi i32 [ -1, %label_26], [%var_101, %label_25]
-call void @printi(i32 %var_102)
-%var_103 = add i32 0, 2
-%var_104 = and i32 %var_103, 255
-%var_105 = add i32 0, 3
-%var_106 = and i32 %var_105, 255
-%var_107 = add i32 0, 5
-%var_108 = and i32 %var_107, 255
-%var_109 = mul i32 %var_106, %var_108
-%var_110 = and i32 %var_109, 255
-%var_111 = add i32 0, 5
-%var_112 = and i32 %var_111, 255
-%var_113 = icmp eq i32 %var_112, 0
-br i1 %var_113, label %label_29, label %label_28
+%reg_102 = phi i32 [ -1, %label_26], [%reg_101, %label_25]
+call void @printi(i32 %reg_102)
+%reg_103 = add i32 0, 2
+%reg_104 = and i32 %reg_103, 255
+%reg_105 = add i32 0, 3
+%reg_106 = and i32 %reg_105, 255
+%reg_107 = add i32 0, 5
+%reg_108 = and i32 %reg_107, 255
+%reg_109 = mul i32 %reg_106, %reg_108
+%reg_110 = and i32 %reg_109, 255
+%reg_111 = add i32 0, 5
+%reg_112 = and i32 %reg_111, 255
+%reg_113 = icmp eq i32 %reg_112, 0
+br i1 %reg_113, label %label_29, label %label_28
 label_29:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_30
 label_28:
-%var_114 = sdiv i32 %var_110, %var_112
+%reg_114 = sdiv i32 %reg_110, %reg_112
 br label %label_30
 label_30:
-%var_115 = phi i32 [ -1, %label_29], [%var_114, %label_28]
-%var_116 = add i32 %var_104, %var_115
-%var_117 = and i32 %var_116, 255
-call void @printi(i32 %var_117)
-%var_118 = add i32 0, 2
-%var_119 = and i32 %var_118, 255
-%var_120 = add i32 0, 3
-%var_121 = and i32 %var_120, 255
-%var_122 = mul i32 %var_119, %var_121
-%var_123 = and i32 %var_122, 255
-%var_124 = add i32 0, 5
-%var_125 = and i32 %var_124, 255
-%var_126 = add i32 0, 5
-%var_127 = and i32 %var_126, 255
-%var_128 = mul i32 %var_125, %var_127
-%var_129 = and i32 %var_128, 255
-%var_130 = add i32 %var_123, %var_129
-%var_131 = and i32 %var_130, 255
-call void @printi(i32 %var_131)
-%var_132 = add i32 0, 6
-%var_133 = and i32 %var_132, 255
-%var_134 = add i32 0, 3
-%var_135 = and i32 %var_134, 255
-%var_136 = icmp eq i32 %var_135, 0
-br i1 %var_136, label %label_32, label %label_31
+%reg_115 = phi i32 [ -1, %label_29], [%reg_114, %label_28]
+%reg_116 = add i32 %reg_104, %reg_115
+%reg_117 = and i32 %reg_116, 255
+call void @printi(i32 %reg_117)
+%reg_118 = add i32 0, 2
+%reg_119 = and i32 %reg_118, 255
+%reg_120 = add i32 0, 3
+%reg_121 = and i32 %reg_120, 255
+%reg_122 = mul i32 %reg_119, %reg_121
+%reg_123 = and i32 %reg_122, 255
+%reg_124 = add i32 0, 5
+%reg_125 = and i32 %reg_124, 255
+%reg_126 = add i32 0, 5
+%reg_127 = and i32 %reg_126, 255
+%reg_128 = mul i32 %reg_125, %reg_127
+%reg_129 = and i32 %reg_128, 255
+%reg_130 = add i32 %reg_123, %reg_129
+%reg_131 = and i32 %reg_130, 255
+call void @printi(i32 %reg_131)
+%reg_132 = add i32 0, 6
+%reg_133 = and i32 %reg_132, 255
+%reg_134 = add i32 0, 3
+%reg_135 = and i32 %reg_134, 255
+%reg_136 = icmp eq i32 %reg_135, 0
+br i1 %reg_136, label %label_32, label %label_31
 label_32:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_33
 label_31:
-%var_137 = sdiv i32 %var_133, %var_135
+%reg_137 = sdiv i32 %reg_133, %reg_135
 br label %label_33
 label_33:
-%var_138 = phi i32 [ -1, %label_32], [%var_137, %label_31]
-%var_139 = add i32 0, 200
-%var_140 = and i32 %var_139, 255
-%var_141 = add i32 0, 5
-%var_142 = and i32 %var_141, 255
-%var_143 = icmp eq i32 %var_142, 0
-br i1 %var_143, label %label_35, label %label_34
+%reg_138 = phi i32 [ -1, %label_32], [%reg_137, %label_31]
+%reg_139 = add i32 0, 200
+%reg_140 = and i32 %reg_139, 255
+%reg_141 = add i32 0, 5
+%reg_142 = and i32 %reg_141, 255
+%reg_143 = icmp eq i32 %reg_142, 0
+br i1 %reg_143, label %label_35, label %label_34
 label_35:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_36
 label_34:
-%var_144 = sdiv i32 %var_140, %var_142
+%reg_144 = sdiv i32 %reg_140, %reg_142
 br label %label_36
 label_36:
-%var_145 = phi i32 [ -1, %label_35], [%var_144, %label_34]
-%var_146 = add i32 %var_138, %var_145
-%var_147 = and i32 %var_146, 255
-call void @printi(i32 %var_147)
-%var_148 = add i32 0, 5
-%var_149 = and i32 %var_148, 255
-%var_150 = add i32 0, 5
-%var_151 = and i32 %var_150, 255
-%var_152 = mul i32 %var_149, %var_151
-%var_153 = and i32 %var_152, 255
-%var_154 = add i32 0, 2
-%var_155 = and i32 %var_154, 255
-%var_156 = add i32 0, 3
-%var_157 = and i32 %var_156, 255
-%var_158 = mul i32 %var_155, %var_157
-%var_159 = and i32 %var_158, 255
-%var_160 = sub i32 %var_153, %var_159
-%var_161 = and i32 %var_160, 255
-call void @printi(i32 %var_161)
-%var_162 = add i32 0, 100
-%var_163 = and i32 %var_162, 255
-%var_164 = add i32 0, 2
-%var_165 = and i32 %var_164, 255
-%var_166 = icmp eq i32 %var_165, 0
-br i1 %var_166, label %label_38, label %label_37
+%reg_145 = phi i32 [ -1, %label_35], [%reg_144, %label_34]
+%reg_146 = add i32 %reg_138, %reg_145
+%reg_147 = and i32 %reg_146, 255
+call void @printi(i32 %reg_147)
+%reg_148 = add i32 0, 5
+%reg_149 = and i32 %reg_148, 255
+%reg_150 = add i32 0, 5
+%reg_151 = and i32 %reg_150, 255
+%reg_152 = mul i32 %reg_149, %reg_151
+%reg_153 = and i32 %reg_152, 255
+%reg_154 = add i32 0, 2
+%reg_155 = and i32 %reg_154, 255
+%reg_156 = add i32 0, 3
+%reg_157 = and i32 %reg_156, 255
+%reg_158 = mul i32 %reg_155, %reg_157
+%reg_159 = and i32 %reg_158, 255
+%reg_160 = sub i32 %reg_153, %reg_159
+%reg_161 = and i32 %reg_160, 255
+call void @printi(i32 %reg_161)
+%reg_162 = add i32 0, 100
+%reg_163 = and i32 %reg_162, 255
+%reg_164 = add i32 0, 2
+%reg_165 = and i32 %reg_164, 255
+%reg_166 = icmp eq i32 %reg_165, 0
+br i1 %reg_166, label %label_38, label %label_37
 label_38:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_39
 label_37:
-%var_167 = sdiv i32 %var_163, %var_165
+%reg_167 = sdiv i32 %reg_163, %reg_165
 br label %label_39
 label_39:
-%var_168 = phi i32 [ -1, %label_38], [%var_167, %label_37]
-%var_169 = add i32 0, 200
-%var_170 = and i32 %var_169, 255
-%var_171 = add i32 0, 10
-%var_172 = and i32 %var_171, 255
-%var_173 = icmp eq i32 %var_172, 0
-br i1 %var_173, label %label_41, label %label_40
+%reg_168 = phi i32 [ -1, %label_38], [%reg_167, %label_37]
+%reg_169 = add i32 0, 200
+%reg_170 = and i32 %reg_169, 255
+%reg_171 = add i32 0, 10
+%reg_172 = and i32 %reg_171, 255
+%reg_173 = icmp eq i32 %reg_172, 0
+br i1 %reg_173, label %label_41, label %label_40
 label_41:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_42
 label_40:
-%var_174 = sdiv i32 %var_170, %var_172
+%reg_174 = sdiv i32 %reg_170, %reg_172
 br label %label_42
 label_42:
-%var_175 = phi i32 [ -1, %label_41], [%var_174, %label_40]
-%var_176 = sub i32 %var_168, %var_175
-%var_177 = and i32 %var_176, 255
-call void @printi(i32 %var_177)
-%var_178 = add i32 0, 5
-%var_179 = and i32 %var_178, 255
-%var_180 = add i32 0, 5
-%var_181 = and i32 %var_180, 255
-%var_182 = mul i32 %var_179, %var_181
-%var_183 = and i32 %var_182, 255
-%var_184 = add i32 0, 2
-%var_185 = and i32 %var_184, 255
-%var_186 = add i32 0, 3
-%var_187 = and i32 %var_186, 255
-%var_188 = mul i32 %var_185, %var_187
-%var_189 = and i32 %var_188, 255
-%var_190 = sub i32 %var_183, %var_189
-%var_191 = and i32 %var_190, 255
-call void @printi(i32 %var_191)
-%var_192 = add i32 0, 100
-%var_193 = and i32 %var_192, 255
-%var_194 = add i32 0, 2
-%var_195 = and i32 %var_194, 255
-%var_196 = icmp eq i32 %var_195, 0
-br i1 %var_196, label %label_44, label %label_43
+%reg_175 = phi i32 [ -1, %label_41], [%reg_174, %label_40]
+%reg_176 = sub i32 %reg_168, %reg_175
+%reg_177 = and i32 %reg_176, 255
+call void @printi(i32 %reg_177)
+%reg_178 = add i32 0, 5
+%reg_179 = and i32 %reg_178, 255
+%reg_180 = add i32 0, 5
+%reg_181 = and i32 %reg_180, 255
+%reg_182 = mul i32 %reg_179, %reg_181
+%reg_183 = and i32 %reg_182, 255
+%reg_184 = add i32 0, 2
+%reg_185 = and i32 %reg_184, 255
+%reg_186 = add i32 0, 3
+%reg_187 = and i32 %reg_186, 255
+%reg_188 = mul i32 %reg_185, %reg_187
+%reg_189 = and i32 %reg_188, 255
+%reg_190 = sub i32 %reg_183, %reg_189
+%reg_191 = and i32 %reg_190, 255
+call void @printi(i32 %reg_191)
+%reg_192 = add i32 0, 100
+%reg_193 = and i32 %reg_192, 255
+%reg_194 = add i32 0, 2
+%reg_195 = and i32 %reg_194, 255
+%reg_196 = icmp eq i32 %reg_195, 0
+br i1 %reg_196, label %label_44, label %label_43
 label_44:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_45
 label_43:
-%var_197 = sdiv i32 %var_193, %var_195
+%reg_197 = sdiv i32 %reg_193, %reg_195
 br label %label_45
 label_45:
-%var_198 = phi i32 [ -1, %label_44], [%var_197, %label_43]
-%var_199 = add i32 0, 200
-%var_200 = and i32 %var_199, 255
-%var_201 = add i32 0, 20
-%var_202 = and i32 %var_201, 255
-%var_203 = icmp eq i32 %var_202, 0
-br i1 %var_203, label %label_47, label %label_46
+%reg_198 = phi i32 [ -1, %label_44], [%reg_197, %label_43]
+%reg_199 = add i32 0, 200
+%reg_200 = and i32 %reg_199, 255
+%reg_201 = add i32 0, 20
+%reg_202 = and i32 %reg_201, 255
+%reg_203 = icmp eq i32 %reg_202, 0
+br i1 %reg_203, label %label_47, label %label_46
 label_47:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_48
 label_46:
-%var_204 = sdiv i32 %var_200, %var_202
+%reg_204 = sdiv i32 %reg_200, %reg_202
 br label %label_48
 label_48:
-%var_205 = phi i32 [ -1, %label_47], [%var_204, %label_46]
-%var_206 = sub i32 %var_198, %var_205
-%var_207 = and i32 %var_206, 255
-call void @printi(i32 %var_207)
-%var_208 = add i32 0, 2
-%var_209 = and i32 %var_208, 255
-%var_210 = add i32 3, 0
-%var_211 = add i32 %var_209, %var_210
-call void @printi(i32 %var_211)
-%var_212 = add i32 0, 10
-%var_213 = and i32 %var_212, 255
-%var_214 = add i32 8, 0
-%var_215 = sub i32 %var_213, %var_214
-call void @printi(i32 %var_215)
-%var_216 = add i32 0, 2
-%var_217 = and i32 %var_216, 255
-%var_218 = add i32 3, 0
-%var_219 = mul i32 %var_217, %var_218
-call void @printi(i32 %var_219)
-%var_220 = add i32 0, 4
-%var_221 = and i32 %var_220, 255
-%var_222 = add i32 2, 0
-%var_223 = icmp eq i32 %var_222, 0
-br i1 %var_223, label %label_50, label %label_49
+%reg_205 = phi i32 [ -1, %label_47], [%reg_204, %label_46]
+%reg_206 = sub i32 %reg_198, %reg_205
+%reg_207 = and i32 %reg_206, 255
+call void @printi(i32 %reg_207)
+%reg_208 = add i32 0, 2
+%reg_209 = and i32 %reg_208, 255
+%reg_210 = add i32 3, 0
+%reg_211 = add i32 %reg_209, %reg_210
+call void @printi(i32 %reg_211)
+%reg_212 = add i32 0, 10
+%reg_213 = and i32 %reg_212, 255
+%reg_214 = add i32 8, 0
+%reg_215 = sub i32 %reg_213, %reg_214
+call void @printi(i32 %reg_215)
+%reg_216 = add i32 0, 2
+%reg_217 = and i32 %reg_216, 255
+%reg_218 = add i32 3, 0
+%reg_219 = mul i32 %reg_217, %reg_218
+call void @printi(i32 %reg_219)
+%reg_220 = add i32 0, 4
+%reg_221 = and i32 %reg_220, 255
+%reg_222 = add i32 2, 0
+%reg_223 = icmp eq i32 %reg_222, 0
+br i1 %reg_223, label %label_50, label %label_49
 label_50:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_51
 label_49:
-%var_224 = sdiv i32 %var_221, %var_222
+%reg_224 = sdiv i32 %reg_221, %reg_222
 br label %label_51
 label_51:
-%var_225 = phi i32 [ -1, %label_50], [%var_224, %label_49]
-call void @printi(i32 %var_225)
-%var_226 = add i32 2, 0
-%var_227 = add i32 0, 3
-%var_228 = and i32 %var_227, 255
-%var_229 = add i32 %var_226, %var_228
-call void @printi(i32 %var_229)
-%var_230 = add i32 10, 0
-%var_231 = add i32 0, 8
-%var_232 = and i32 %var_231, 255
-%var_233 = sub i32 %var_230, %var_232
-call void @printi(i32 %var_233)
-%var_234 = add i32 2, 0
-%var_235 = add i32 0, 3
-%var_236 = and i32 %var_235, 255
-%var_237 = mul i32 %var_234, %var_236
-call void @printi(i32 %var_237)
-%var_238 = add i32 4, 0
-%var_239 = add i32 0, 2
-%var_240 = and i32 %var_239, 255
-%var_241 = icmp eq i32 %var_240, 0
-br i1 %var_241, label %label_53, label %label_52
+%reg_225 = phi i32 [ -1, %label_50], [%reg_224, %label_49]
+call void @printi(i32 %reg_225)
+%reg_226 = add i32 2, 0
+%reg_227 = add i32 0, 3
+%reg_228 = and i32 %reg_227, 255
+%reg_229 = add i32 %reg_226, %reg_228
+call void @printi(i32 %reg_229)
+%reg_230 = add i32 10, 0
+%reg_231 = add i32 0, 8
+%reg_232 = and i32 %reg_231, 255
+%reg_233 = sub i32 %reg_230, %reg_232
+call void @printi(i32 %reg_233)
+%reg_234 = add i32 2, 0
+%reg_235 = add i32 0, 3
+%reg_236 = and i32 %reg_235, 255
+%reg_237 = mul i32 %reg_234, %reg_236
+call void @printi(i32 %reg_237)
+%reg_238 = add i32 4, 0
+%reg_239 = add i32 0, 2
+%reg_240 = and i32 %reg_239, 255
+%reg_241 = icmp eq i32 %reg_240, 0
+br i1 %reg_241, label %label_53, label %label_52
 label_53:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_54
 label_52:
-%var_242 = sdiv i32 %var_238, %var_240
+%reg_242 = sdiv i32 %reg_238, %reg_240
 br label %label_54
 label_54:
-%var_243 = phi i32 [ -1, %label_53], [%var_242, %label_52]
-call void @printi(i32 %var_243)
-%var_244 = add i32 0, 2
-%var_245 = and i32 %var_244, 255
-%var_246 = add i32 3, 0
-%var_247 = add i32 0, 5
-%var_248 = and i32 %var_247, 255
-%var_249 = mul i32 %var_246, %var_248
-%var_250 = add i32 5, 0
-%var_251 = icmp eq i32 %var_250, 0
-br i1 %var_251, label %label_56, label %label_55
+%reg_243 = phi i32 [ -1, %label_53], [%reg_242, %label_52]
+call void @printi(i32 %reg_243)
+%reg_244 = add i32 0, 2
+%reg_245 = and i32 %reg_244, 255
+%reg_246 = add i32 3, 0
+%reg_247 = add i32 0, 5
+%reg_248 = and i32 %reg_247, 255
+%reg_249 = mul i32 %reg_246, %reg_248
+%reg_250 = add i32 5, 0
+%reg_251 = icmp eq i32 %reg_250, 0
+br i1 %reg_251, label %label_56, label %label_55
 label_56:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_57
 label_55:
-%var_252 = sdiv i32 %var_249, %var_250
+%reg_252 = sdiv i32 %reg_249, %reg_250
 br label %label_57
 label_57:
-%var_253 = phi i32 [ -1, %label_56], [%var_252, %label_55]
-%var_254 = add i32 %var_245, %var_253
-call void @printi(i32 %var_254)
-%var_255 = add i32 0, 2
-%var_256 = and i32 %var_255, 255
-%var_257 = add i32 3, 0
-%var_258 = mul i32 %var_256, %var_257
-%var_259 = add i32 0, 5
-%var_260 = and i32 %var_259, 255
-%var_261 = add i32 5, 0
-%var_262 = mul i32 %var_260, %var_261
-%var_263 = add i32 %var_258, %var_262
-call void @printi(i32 %var_263)
-%var_264 = add i32 0, 6
-%var_265 = and i32 %var_264, 255
-%var_266 = add i32 3, 0
-%var_267 = icmp eq i32 %var_266, 0
-br i1 %var_267, label %label_59, label %label_58
+%reg_253 = phi i32 [ -1, %label_56], [%reg_252, %label_55]
+%reg_254 = add i32 %reg_245, %reg_253
+call void @printi(i32 %reg_254)
+%reg_255 = add i32 0, 2
+%reg_256 = and i32 %reg_255, 255
+%reg_257 = add i32 3, 0
+%reg_258 = mul i32 %reg_256, %reg_257
+%reg_259 = add i32 0, 5
+%reg_260 = and i32 %reg_259, 255
+%reg_261 = add i32 5, 0
+%reg_262 = mul i32 %reg_260, %reg_261
+%reg_263 = add i32 %reg_258, %reg_262
+call void @printi(i32 %reg_263)
+%reg_264 = add i32 0, 6
+%reg_265 = and i32 %reg_264, 255
+%reg_266 = add i32 3, 0
+%reg_267 = icmp eq i32 %reg_266, 0
+br i1 %reg_267, label %label_59, label %label_58
 label_59:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_60
 label_58:
-%var_268 = sdiv i32 %var_265, %var_266
+%reg_268 = sdiv i32 %reg_265, %reg_266
 br label %label_60
 label_60:
-%var_269 = phi i32 [ -1, %label_59], [%var_268, %label_58]
-%var_270 = add i32 0, 200
-%var_271 = and i32 %var_270, 255
-%var_272 = add i32 5, 0
-%var_273 = icmp eq i32 %var_272, 0
-br i1 %var_273, label %label_62, label %label_61
+%reg_269 = phi i32 [ -1, %label_59], [%reg_268, %label_58]
+%reg_270 = add i32 0, 200
+%reg_271 = and i32 %reg_270, 255
+%reg_272 = add i32 5, 0
+%reg_273 = icmp eq i32 %reg_272, 0
+br i1 %reg_273, label %label_62, label %label_61
 label_62:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_63
 label_61:
-%var_274 = sdiv i32 %var_271, %var_272
+%reg_274 = sdiv i32 %reg_271, %reg_272
 br label %label_63
 label_63:
-%var_275 = phi i32 [ -1, %label_62], [%var_274, %label_61]
-%var_276 = add i32 %var_269, %var_275
-call void @printi(i32 %var_276)
-%var_277 = add i32 0, 5
-%var_278 = and i32 %var_277, 255
-%var_279 = add i32 5, 0
-%var_280 = mul i32 %var_278, %var_279
-%var_281 = add i32 0, 2
-%var_282 = and i32 %var_281, 255
-%var_283 = add i32 3, 0
-%var_284 = mul i32 %var_282, %var_283
-%var_285 = sub i32 %var_280, %var_284
-call void @printi(i32 %var_285)
-%var_286 = add i32 0, 100
-%var_287 = and i32 %var_286, 255
-%var_288 = add i32 2, 0
-%var_289 = icmp eq i32 %var_288, 0
-br i1 %var_289, label %label_65, label %label_64
+%reg_275 = phi i32 [ -1, %label_62], [%reg_274, %label_61]
+%reg_276 = add i32 %reg_269, %reg_275
+call void @printi(i32 %reg_276)
+%reg_277 = add i32 0, 5
+%reg_278 = and i32 %reg_277, 255
+%reg_279 = add i32 5, 0
+%reg_280 = mul i32 %reg_278, %reg_279
+%reg_281 = add i32 0, 2
+%reg_282 = and i32 %reg_281, 255
+%reg_283 = add i32 3, 0
+%reg_284 = mul i32 %reg_282, %reg_283
+%reg_285 = sub i32 %reg_280, %reg_284
+call void @printi(i32 %reg_285)
+%reg_286 = add i32 0, 100
+%reg_287 = and i32 %reg_286, 255
+%reg_288 = add i32 2, 0
+%reg_289 = icmp eq i32 %reg_288, 0
+br i1 %reg_289, label %label_65, label %label_64
 label_65:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_66
 label_64:
-%var_290 = sdiv i32 %var_287, %var_288
+%reg_290 = sdiv i32 %reg_287, %reg_288
 br label %label_66
 label_66:
-%var_291 = phi i32 [ -1, %label_65], [%var_290, %label_64]
-%var_292 = add i32 0, 200
-%var_293 = and i32 %var_292, 255
-%var_294 = add i32 10, 0
-%var_295 = icmp eq i32 %var_294, 0
-br i1 %var_295, label %label_68, label %label_67
+%reg_291 = phi i32 [ -1, %label_65], [%reg_290, %label_64]
+%reg_292 = add i32 0, 200
+%reg_293 = and i32 %reg_292, 255
+%reg_294 = add i32 10, 0
+%reg_295 = icmp eq i32 %reg_294, 0
+br i1 %reg_295, label %label_68, label %label_67
 label_68:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_69
 label_67:
-%var_296 = sdiv i32 %var_293, %var_294
+%reg_296 = sdiv i32 %reg_293, %reg_294
 br label %label_69
 label_69:
-%var_297 = phi i32 [ -1, %label_68], [%var_296, %label_67]
-%var_298 = sub i32 %var_291, %var_297
-call void @printi(i32 %var_298)
-%var_299 = add i32 0, 5
-%var_300 = and i32 %var_299, 255
-%var_301 = add i32 5, 0
-%var_302 = mul i32 %var_300, %var_301
-%var_303 = add i32 0, 2
-%var_304 = and i32 %var_303, 255
-%var_305 = add i32 3, 0
-%var_306 = mul i32 %var_304, %var_305
-%var_307 = sub i32 %var_302, %var_306
-call void @printi(i32 %var_307)
-%var_308 = add i32 0, 100
-%var_309 = and i32 %var_308, 255
-%var_310 = add i32 2, 0
-%var_311 = icmp eq i32 %var_310, 0
-br i1 %var_311, label %label_71, label %label_70
+%reg_297 = phi i32 [ -1, %label_68], [%reg_296, %label_67]
+%reg_298 = sub i32 %reg_291, %reg_297
+call void @printi(i32 %reg_298)
+%reg_299 = add i32 0, 5
+%reg_300 = and i32 %reg_299, 255
+%reg_301 = add i32 5, 0
+%reg_302 = mul i32 %reg_300, %reg_301
+%reg_303 = add i32 0, 2
+%reg_304 = and i32 %reg_303, 255
+%reg_305 = add i32 3, 0
+%reg_306 = mul i32 %reg_304, %reg_305
+%reg_307 = sub i32 %reg_302, %reg_306
+call void @printi(i32 %reg_307)
+%reg_308 = add i32 0, 100
+%reg_309 = and i32 %reg_308, 255
+%reg_310 = add i32 2, 0
+%reg_311 = icmp eq i32 %reg_310, 0
+br i1 %reg_311, label %label_71, label %label_70
 label_71:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_72
 label_70:
-%var_312 = sdiv i32 %var_309, %var_310
+%reg_312 = sdiv i32 %reg_309, %reg_310
 br label %label_72
 label_72:
-%var_313 = phi i32 [ -1, %label_71], [%var_312, %label_70]
-%var_314 = add i32 0, 200
-%var_315 = and i32 %var_314, 255
-%var_316 = add i32 20, 0
-%var_317 = icmp eq i32 %var_316, 0
-br i1 %var_317, label %label_74, label %label_73
+%reg_313 = phi i32 [ -1, %label_71], [%reg_312, %label_70]
+%reg_314 = add i32 0, 200
+%reg_315 = and i32 %reg_314, 255
+%reg_316 = add i32 20, 0
+%reg_317 = icmp eq i32 %reg_316, 0
+br i1 %reg_317, label %label_74, label %label_73
 label_74:
 call void @print(i8* getelementptr ([24 x i8], [24 x i8]* @.div_zero_error_msg, i32 0, i32 0))
 call void @exit(i32 1)
 br label %label_75
 label_73:
-%var_318 = sdiv i32 %var_315, %var_316
+%reg_318 = sdiv i32 %reg_315, %reg_316
 br label %label_75
 label_75:
-%var_319 = phi i32 [ -1, %label_74], [%var_318, %label_73]
-%var_320 = sub i32 %var_313, %var_319
-call void @printi(i32 %var_320)
+%reg_319 = phi i32 [ -1, %label_74], [%reg_318, %label_73]
+%reg_320 = sub i32 %reg_313, %reg_319
+call void @printi(i32 %reg_320)
 ret i32 0
 }

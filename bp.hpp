@@ -14,16 +14,22 @@ class CodeBuffer {
 public:
 	CodeBuffer();
 	CodeBuffer(CodeBuffer const&);
-    void operator=(CodeBuffer const&);
+    	void operator=(CodeBuffer const&);
 	std::vector<std::string> buffer;
 	std::vector<std::string> globalDefs;
+	std::string stackPtr;
 	int labels_num = 1;
 	int vars_num = 1;
+	int regs_num = 1;
 	static CodeBuffer &instance();
 
 	// ******** Methods to handle the code section ******** //
 
 	void initDeclerations();
+
+	void initMain();
+
+	void finishMain();
 
 	//generates a jump location label for the next command, writes it to the buffer and returns it
 	std::string genLabel();
@@ -31,9 +37,9 @@ public:
 	//generates a jump location label for the next command and returns it
 	std::string freshLabel();
 
-	//generates a jump location label for the next command and returns it
 	std::string freshVar();
 
+	std::string freshReg();
 	//writes command to the buffer, returns its location in the buffer
 	int emit(const std::string &command);
 
