@@ -138,10 +138,21 @@ Call : ID LPAREN Exp RPAREN {
                 output::errorUndef(yylineno, exp->text);
                 exit(1);
             }
+
             std::string type = verifyFunc($1->text, exp->type, yylineno);
-            std::string var = handleExp(exp);
-            generateFuncUsageCode($1->text, var);
-            $$ = new Call("", type, "",0, true);
+
+            if ($1->text == "print") {
+                generatePrintCode(exp->text, exp->reg);
+                $$ = new Call("", type, "",0, true);
+            } else if ($1->text == "printi") {
+                std::string reg = handleExp(exp);
+                generatePrintiCode(reg);
+                $$ = new Call("", type, "",0, true);
+            } else if ($1->text == "readi") {
+                std::string reg = handleExp(exp);
+                std::string ret = generateReadiCode(reg);
+                $$ = new Call("", type, ret ,exp->val, true);
+            }
         }
      ;
 Type : INT { $$ = new Type("INT");}
@@ -198,7 +209,7 @@ Exp : LPAREN Exp RPAREN {
         }
     | Call {
          Call* call = dynamic_cast<Call*>($1);
-         $$ = new Exp(call->text, call->type, "",call->val, call->is_const);
+         $$ = new Exp(call->text, call->type, call->reg ,call->val, call->is_const);
          }
     | NUM {
         int value = std::stoi($1->text);
@@ -210,7 +221,14 @@ Exp : LPAREN Exp RPAREN {
         $$ = new Exp($1->text, "BYTE","", value, true);
         generateNumByteCode(dynamic_cast<Exp*>($$));
         }
-    | STRING { $$ = new Exp("", "STRING", "", 0, true); }
+    | STRING {
+        std::string fixed_string = $1->text;
+        fixed_string.erase(0, 1);
+        fixed_string.erase(fixed_string.size() - 1, 1);
+
+        std::string global_string = generateGlobalString(fixed_string);
+        $$ = new Exp(fixed_string, "STRING", global_string, 0, true);
+        }
     | TRUE { $$ = new Exp("", "BOOL", "",1, true); }
     | FALSE { $$ = new Exp("", "BOOL", "",0, true); }
     | NOT Exp {
@@ -250,10 +268,12 @@ Exp : LPAREN Exp RPAREN {
     | Exp OR Exp {
             Exp* exp1 = dynamic_cast<Exp*>($1);
             Exp* exp2 = dynamic_cast<Exp*>($3);
+
             if (!exp1->is_const && !table_stack.entryExists(exp1->text)) {
                 output::errorUndef(yylineno, exp1->text);
                 exit(1);
             }
+
             if (!exp2->is_const && !table_stack.entryExists(exp2->text)) {
                 output::errorUndef(yylineno, exp2->text);
                 exit(1);
@@ -263,19 +283,23 @@ Exp : LPAREN Exp RPAREN {
                 output::errorMismatch(yylineno);
                 exit(1);
             }
+
             if (exp2->type != "BOOL") {
                 output::errorMismatch(yylineno);
                 exit(1);
             }
+
             $$ = new Exp("", "BOOL", "",exp1->val | exp2->val, true);
         }
     | Exp RELOP_EQ Exp {
             Exp* exp1 = dynamic_cast<Exp*>($1);
             Exp* exp2 = dynamic_cast<Exp*>($3);
+
             if (!exp1->is_const && !table_stack.entryExists(exp1->text)) {
                 output::errorUndef(yylineno, exp1->text);
                 exit(1);
             }
+
             if (!exp2->is_const && !table_stack.entryExists(exp2->text)) {
                 output::errorUndef(yylineno, exp2->text);
                 exit(1);
@@ -287,10 +311,12 @@ Exp : LPAREN Exp RPAREN {
     | Exp RELOP_REL Exp {
             Exp* exp1 = dynamic_cast<Exp*>($1);
             Exp* exp2 = dynamic_cast<Exp*>($3);
+
             if (!exp1->is_const && !table_stack.entryExists(exp1->text)) {
                 output::errorUndef(yylineno, exp1->text);
                 exit(1);
             }
+
             if (!exp2->is_const && !table_stack.entryExists(exp2->text)) {
                 output::errorUndef(yylineno, exp2->text);
                 exit(1);
@@ -301,6 +327,7 @@ Exp : LPAREN Exp RPAREN {
     | LPAREN Type RPAREN Exp {
             Exp* exp = dynamic_cast<Exp*>($4);
             int val = exp->val;
+
             if (!exp->is_const && !table_stack.entryExists(exp->text)) {
                 output::errorUndef(yylineno, exp->text);
                 exit(1);
@@ -340,11 +367,7 @@ M2 : { table_stack.removeTopTable(); }
 
 int main()
 {
-    buffer.initDeclerations();
-    buffer.initMain();
     int res = yyparse();
-    buffer.finishMain();
-    buffer.printCodeBuffer();
     return res;
 }
 

@@ -209,3 +209,29 @@ std::string generateLoad(std::string name) {
 void generateStore(std::string src, std::string target) {
         buffer.emit("store i32 " + src + ", i32* " + target);
 }
+
+std::string generateGlobalString(std::string str) {
+        static int string_counter = 0;
+        std::string global_string;
+
+        string_counter++;
+        global_string = "@.global_string" + to_string(string_counter);
+        buffer.emitGlobal(global_string + " = constant [" + to_string(str.size() + 1) + " x i8] c\"" + str + "\\00\"");
+
+        return global_string;
+}
+
+void generatePrintCode(std::string str, std::string arg) {
+        std::string str_len = to_string(str.size() + 1);
+        buffer.emit("call void @print(i8* getelementptr ([" + str_len + " x i8], [" +str_len + " x i8]* " + arg +", i32 0, i32 0))");
+}
+
+void generatePrintiCode(std::string arg) {
+        buffer.emit("call void @printi(i32 " + arg + ")");
+}
+
+std::string generateReadiCode(std::string arg) {
+        std::string reg = buffer.freshReg();
+        buffer.emit(reg + " = call i32 @readi(i32 " + arg + ")");
+        return reg;
+}

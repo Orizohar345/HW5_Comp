@@ -13,6 +13,7 @@ enum BranchLabelIndex {FIRST, SECOND};
 class CodeBuffer {
 public:
 	CodeBuffer();
+	~CodeBuffer();
 	CodeBuffer(CodeBuffer const&);
     	void operator=(CodeBuffer const&);
 	std::vector<std::string> buffer;
@@ -24,6 +25,7 @@ public:
 	static CodeBuffer &instance();
 
 	// ******** Methods to handle the code section ******** //
+	void initGlobals();
 
 	void initDeclerations();
 

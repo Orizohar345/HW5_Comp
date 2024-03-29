@@ -6,11 +6,31 @@ using namespace std;
 
 bool replace(string& str, const string& from, const string& to, const BranchLabelIndex index);
 
-CodeBuffer::CodeBuffer() : buffer(), globalDefs() {}
+CodeBuffer::CodeBuffer() : buffer(), globalDefs() {
+    initGlobals();
+    initDeclerations();
+    initMain();
+}
+
+CodeBuffer::~CodeBuffer() {
+    finishMain();
+    emitGlobal("\0A");
+    printGlobalBuffer();
+    printCodeBuffer();
+}
 
 CodeBuffer &CodeBuffer::instance() {
 	static CodeBuffer inst;//only instance
 	return inst;
+}
+
+void CodeBuffer::initGlobals() {
+        // Emit global constants for format specifiers
+    emitGlobal("@.int_specifier_scan = constant [3 x i8] c\"%d\\00\"");
+    emitGlobal("@.int_specifier = constant [4 x i8] c\"%d\\0A\\00\"");
+    emitGlobal("@.str_specifier = constant [4 x i8] c\"%s\\0A\\00\"");
+    emitGlobal("@.div_zero_error_msg = constant [23 x i8] c\"Error division by zero\\00\"");
+
 }
 
 void CodeBuffer::initDeclerations() {
@@ -19,11 +39,7 @@ void CodeBuffer::initDeclerations() {
     emit("declare i32 @printf(i8*, ...)");
     emit("declare void @exit(i32)");
 
-    // Emit global constants for format specifiers
-    emit("@.int_specifier_scan = constant [3 x i8] c\"%d\\00\"");
-    emit("@.int_specifier = constant [4 x i8] c\"%d\\0A\\00\"");
-    emit("@.str_specifier = constant [4 x i8] c\"%s\\0A\\00\"");
-    emit("@.div_zero_error_msg = constant [24 x i8] c\"Error division by zero\\0A\\00\"");
+    emit("\0A");
 
     // Define the readi function
     emit("define i32 @readi(i32) {");
@@ -34,6 +50,8 @@ void CodeBuffer::initDeclerations() {
     emit("  ret i32 %val");
     emit("}");
 
+    emit("\0A");
+
     // Define the printi function
     emit("define void @printi(i32) {");
     emit("  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.int_specifier, i32 0, i32 0");
@@ -41,18 +59,22 @@ void CodeBuffer::initDeclerations() {
     emit("  ret void");
     emit("}");
 
+    emit("\0A");
+
     // Define the print function
     emit("define void @print(i8*) {");
     emit("  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.str_specifier, i32 0, i32 0");
     emit("  call i32 (i8*, ...) @printf(i8* %spec_ptr, i8* %0)");
     emit("  ret void");
     emit("}");
+    emit("\0A");
 }
 
 void  CodeBuffer::initMain() {
     emit("define i32 @main() {");
     stackPtr = "%vars_buffer";
     emit(stackPtr + " = alloca [50 x i32]");
+    emit("\0A");
 }
 
 void  CodeBuffer::finishMain() {

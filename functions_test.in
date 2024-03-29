@@ -1,0 +1,5 @@
+int x = readi(2);
+printi(x);
+print("I am Printing String");
+int y = x;
+printi(y);

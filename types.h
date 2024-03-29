@@ -97,9 +97,12 @@ void generateBinopCode(Exp *res, std::string operand1, std::string operand2, con
 void generateNumCode(Exp* num);
 void generateNumByteCode(Exp* num);
 std::string generateIdCode(std::string val = "0");
-void generateFuncUsageCode(const std::string& func_name, const std::string& arg);
 std::string handleExp(Exp* exp);
 std::string generateLoad(std::string name);
 void generateStore(std::string src, std::string target);
+std::string generateGlobalString(std::string str);
+void generatePrintCode(std::string str, std::string arg);
+void generatePrintiCode(std::string arg);
+std::string generateReadiCode(std::string arg);
 
 #endif
