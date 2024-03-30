@@ -16,6 +16,8 @@
     TablesStack table_stack;
     CodeBuffer buffer;
 
+    Exp* globalExp;
+
 %}
 
 %token TRUE FALSE RETURN IF WHILE BREAK CONTINUE SC LPAREN RPAREN LBRACE RBRACE INT BYTE B BOOL STRING ID NUM
@@ -167,6 +169,7 @@ Exp : LPAREN Exp RPAREN {
                 exit(1);
             }
             $$ = new Exp(exp->text, exp->type, exp->reg, exp->val, exp->is_const);
+            globalExp = dynamic_cast<Exp*>($$);
         }
     | Exp BINOP_MULT Exp {
             Exp* exp1 = dynamic_cast<Exp*>($1);
@@ -183,6 +186,7 @@ Exp : LPAREN Exp RPAREN {
             int val = calcBinop(exp1->type, exp2->type, exp1->val, exp2->val, $2->text, yylineno);
             $$ = new Exp("", type, "" , val, true);
             generateBinopCode(dynamic_cast<Exp*>($$), handleExp(exp1), handleExp(exp2), $2->text);
+            globalExp = dynamic_cast<Exp*>($$);
         }
     | Exp BINOP_ADD Exp {
             Exp* exp1 = dynamic_cast<Exp*>($1);
@@ -199,6 +203,7 @@ Exp : LPAREN Exp RPAREN {
             int val = calcBinop(exp1->type, exp2->type, exp1->val, exp2->val, $2->text, yylineno);
             $$ = new Exp("", type, "", val, true);
             generateBinopCode(dynamic_cast<Exp*>($$), handleExp(exp1), handleExp(exp2), $2->text);
+            globalExp = dynamic_cast<Exp*>($$);
         }
     | ID {
         if (table_stack.entryExists($1->text)) {
@@ -206,20 +211,24 @@ Exp : LPAREN Exp RPAREN {
             $$ = new Exp($1->text, entry.type, "",entry.val, false);
         } else
             $$ = new Exp($1->text, "", "",0, false);
+        globalExp = dynamic_cast<Exp*>($$);
         }
     | Call {
          Call* call = dynamic_cast<Call*>($1);
          $$ = new Exp(call->text, call->type, call->reg ,call->val, call->is_const);
+         globalExp = dynamic_cast<Exp*>($$);
          }
     | NUM {
         int value = std::stoi($1->text);
         $$ = new Exp($1->text, "INT", "",value, true);
         generateNumCode(dynamic_cast<Exp*>($$));
+        globalExp = dynamic_cast<Exp*>($$);
         }
     | NUM B {
         int value = std::stoi($1->text) & 255;
         $$ = new Exp($1->text, "BYTE","", value, true);
         generateNumByteCode(dynamic_cast<Exp*>($$));
+        globalExp = dynamic_cast<Exp*>($$);
         }
     | STRING {
         std::string fixed_string = $1->text;
@@ -228,14 +237,17 @@ Exp : LPAREN Exp RPAREN {
 
         std::string global_string = generateGlobalString(fixed_string);
         $$ = new Exp(fixed_string, "STRING", global_string, 0, true);
+        globalExp = dynamic_cast<Exp*>($$);
         }
     | TRUE {
         $$ = new Exp("", "BOOL", "",1, true);
         generateTrueCode(dynamic_cast<Exp*>($$));
+        globalExp = dynamic_cast<Exp*>($$);
     }
     | FALSE {
         $$ = new Exp("", "BOOL", "",0, true);
         generateFalseCode(dynamic_cast<Exp*>($$));
+        globalExp = dynamic_cast<Exp*>($$);
         }
     | NOT Exp {
             Exp* exp = dynamic_cast<Exp*>($2);
@@ -249,10 +261,11 @@ Exp : LPAREN Exp RPAREN {
             }
             $$ = new Exp("", "BOOL", "",~exp->val, true);
             generateNotCode(dynamic_cast<Exp*>($$), handleExp(exp));
+            globalExp = dynamic_cast<Exp*>($$);
         }
-    | Exp AND Exp {
-            Exp* exp1 = dynamic_cast<Exp*>($1);
-            Exp* exp2 = dynamic_cast<Exp*>($3);
+    | Exp AND AND_MARKER Exp {
+            BoolAndOperation* exp1 = dynamic_cast<BoolAndOperation*>($3);
+            Exp* exp2 = dynamic_cast<Exp*>($4);
             if (!exp1->is_const && !table_stack.entryExists(exp1->text)) {
                 output::errorUndef(yylineno, exp1->text);
                 exit(1);
@@ -270,12 +283,12 @@ Exp : LPAREN Exp RPAREN {
                 output::errorMismatch(yylineno);
                 exit(1);
             }
-            $$ = new Exp("", "BOOL", "" ,exp1->val & exp2->val, true);
-            generateAndCode(dynamic_cast<Exp*>($$),handleExp(exp1), handleExp(exp2));
-        }
-    | Exp OR Exp {
-            Exp* exp1 = dynamic_cast<Exp*>($1);
-            Exp* exp2 = dynamic_cast<Exp*>($3);
+            $$ = new Exp("", "BOOL", exp1->finalizeOperation(exp2) ,exp1->val & exp2->val, true);
+            globalExp = dynamic_cast<Exp*>($$);
+            }
+    | Exp OR OR_MARKER Exp {
+            BoolOrOperation* exp1 = dynamic_cast<BoolOrOperation*>($3);
+            Exp* exp2 = dynamic_cast<Exp*>($4);
 
             if (!exp1->is_const && !table_stack.entryExists(exp1->text)) {
                 output::errorUndef(yylineno, exp1->text);
@@ -297,11 +310,12 @@ Exp : LPAREN Exp RPAREN {
                 exit(1);
             }
 
-            $$ = new Exp("", "BOOL", "",exp1->val | exp2->val, true);
-            generateOrCode(dynamic_cast<Exp*>($$),handleExp(exp1), handleExp(exp2));
+            $$ = new Exp("", "BOOL", exp1->finalizeOperation(exp2), exp1->val | exp2->val, true);
+            globalExp = dynamic_cast<Exp*>($$);
+
         }
     | Exp RELOP_EQ Exp {
-            Exp* exp1 = dynamic_cast<Exp*>($1);
+        Exp* exp1 = dynamic_cast<Exp*>($1);
             Exp* exp2 = dynamic_cast<Exp*>($3);
 
             if (!exp1->is_const && !table_stack.entryExists(exp1->text)) {
@@ -316,6 +330,7 @@ Exp : LPAREN Exp RPAREN {
 
             verifyNumeric(exp1->type, exp2->type, yylineno);
             $$ = new Exp("", "BOOL", "", 0, true);
+            globalExp = dynamic_cast<Exp*>($$);
         }
     | Exp RELOP_REL Exp {
             Exp* exp1 = dynamic_cast<Exp*>($1);
@@ -332,6 +347,7 @@ Exp : LPAREN Exp RPAREN {
             }
             verifyNumeric(exp1->type, exp2->type, yylineno);
             $$ = new Exp("", "BOOL", "",0, true);
+            globalExp = dynamic_cast<Exp*>($$);
         }
     | LPAREN Type RPAREN Exp {
             Exp* exp = dynamic_cast<Exp*>($4);
@@ -351,6 +367,7 @@ Exp : LPAREN Exp RPAREN {
                 generateNumByteCode(exp);
             else
                 generateNumCode(exp);
+            globalExp = dynamic_cast<Exp*>($$);
         }
     ;
 
@@ -371,6 +388,19 @@ M1 : Exp    {
 
 M2 : { table_stack.removeTopTable(); }
    ;
+
+OR_MARKER : {
+        BoolOrOperation *orOp = new BoolOrOperation(*globalExp);
+        orOp->emitInitialPart();
+        $$ = orOp;
+    }
+    ;
+AND_MARKER : {
+        BoolAndOperation *andOp = new BoolAndOperation(*globalExp);
+        andOp->emitInitialPart();
+        $$ = andOp;
+    }
+    ;
 
 %%
 

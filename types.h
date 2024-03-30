@@ -84,6 +84,30 @@ public:
     using Exp::Exp;
 };
 
+class BoolOp : public Exp {
+public:
+    std::string trueLabel, falseLabel, endLabel, nextLabel;
+
+    BoolOp(Exp op1);
+    virtual void emitInitialPart() = 0;
+    virtual std::string finalizeOperation(Exp* operand2) = 0;
+};
+
+class BoolAndOperation : public BoolOp {
+public:
+    BoolAndOperation(Exp op1);
+    void emitInitialPart() override;
+    std::string finalizeOperation(Exp* operand2) override;
+};
+
+class BoolOrOperation : public BoolOp {
+public:
+    BoolOrOperation(Exp op1);
+    void emitInitialPart() override;
+    std::string finalizeOperation(Exp* operand2) override;
+};
+
+
 
 void verifyNumeric(std::string type1, std::string type2, int lineno);
 std::string verifyBinop(std::string type1, std::string type2, int lineno);
@@ -97,7 +121,7 @@ void generateBinopCode(Exp *res, std::string operand1, std::string operand2, con
 void generateNumCode(Exp* num);
 void generateNumByteCode(Exp* num);
 std::string generateIdCode(std::string val = "0");
-std::string handleExp(Exp* exp);
+std::string handleExp(Exp* exp, std::string boolCompare = "Assign");
 std::string generateLoad(std::string name);
 void generateStore(std::string src, std::string target);
 std::string generateGlobalString(std::string str);
@@ -106,8 +130,6 @@ void generatePrintiCode(std::string arg);
 std::string generateReadiCode(std::string arg);
 void generateTrueCode(Exp* b);
 void generateFalseCode(Exp* b);
-void generateNotCode(Exp* res, std::string b);
-void generateAndCode(Exp* res, std::string operand1, std::string operand2);
-void generateOrCode(Exp* res, std::string operand1, std::string operand2);
+void generateNotCode(Exp* res, std::string operand);
 
 #endif

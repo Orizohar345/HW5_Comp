@@ -187,17 +187,27 @@ void generateFuncUsageCode(const std::string& func_name, const std::string& arg)
     }
 }
 
-std::string handleExp(Exp* exp) {
-    if (exp->is_const) {
+std::string handleExp(Exp* exp, std::string boolCompare) {
+        std::string ret;
+        if (exp->is_const) {
         // If the expression is a constant, just return its associated variable name
-        return exp->reg;
-    } else {
-        std::string var = generateLoad(exp->text);
-        std::string reg = buffer.freshReg();
-        buffer.emit(reg + " = load i32, i32* " + var);
-        return reg;
-    }
+                ret = exp->reg;
+        } else {
+                std::string var = generateLoad(exp->text);
+                std::string reg = buffer.freshReg();
+                buffer.emit(reg + " = load i32, i32* " + var);
+                ret = reg;
+        }
+
+        if (exp->type == "BOOL" && boolCompare == "Compare") {
+                // For boolean expressions, truncate the i32 value to i1
+                std::string boolReg = buffer.freshReg(); // Generate a fresh register for the boolean result
+                buffer.emit(boolReg + " = trunc i32 " + ret + " to i1"); // Perform the truncation
+                ret = boolReg;
+        }
+        return ret;
 }
+
 
 std::string generateLoad(std::string name) {
         Entry entry = table_stack.getEntry(name);
@@ -236,71 +246,76 @@ std::string generateReadiCode(std::string arg) {
         return reg;
 }
 
-void generateAndCode(Exp* res, std::string operand1, std::string operand2){
-    std::string trueLabel = buffer.freshLabel();
-    std::string falseLabel = buffer.freshLabel();
-    std::string endLabel = buffer.freshLabel();
-    std::string label0 = buffer.freshLabel();
-
-    std::string op1 = buffer.freshVar();
-    buffer.emit(op1 + " = icmp eq i32 " + operand1 + ", 0");
-    buffer.emit("br i1 " + op1 + ", label %" + falseLabel + ", label %" + label0);
-
-    buffer.emit(label0 + ":");
-    std::string op2 = buffer.freshVar();
-    buffer.emit(op2 + " = icmp eq i32 " + operand2 + ", 0");
-    buffer.emit("br i1 " + op2 + ", label %" + falseLabel + ", label %" + trueLabel);
-
-    buffer.emit(falseLabel + ":");
-    buffer.emit("br i1 label %" + endLabel);
-
-    buffer.emit(trueLabel + ":");
-    buffer.emit("br i1 label %" + endLabel);
-
-    buffer.emit(endLabel + ":");
-    std::string resultVar = buffer.freshVar();
-    buffer.emit(resultVar + " = phi i32 [ 1, %" + trueLabel + "], [ 0, %" + falseLabel + "]");
-    res->reg = resultVar;
-}
-
-void generateOrCode(Exp* res, std::string operand1, std::string operand2){
-    std::string trueLabel = buffer.freshLabel();
-    std::string falseLabel = buffer.freshLabel();
-    std::string endLabel = buffer.freshLabel();
-    std::string label0 = buffer.freshLabel();
-
-    std::string op1 = buffer.freshVar();
-    buffer.emit(op1 + " = icmp eq i32 " + operand1 + ", 0");
-    buffer.emit("br i1 " + op1 + ", label %" + label0 + ", label %" + trueLabel);
-
-    buffer.emit(label0 + ":");
-    std::string op2 = buffer.freshVar();
-    buffer.emit(op2 + " = icmp eq i32 " + operand2 + ", 0");
-    buffer.emit("br i1 " + op2 + ", label %" + falseLabel + ", label %" + trueLabel);
-
-    buffer.emit(falseLabel + ":");
-    buffer.emit("br i1 label %" + endLabel);
-
-    buffer.emit(trueLabel + ":");
-    buffer.emit("br i1 label %" + endLabel);
-
-    buffer.emit(endLabel + ":");
-    std::string resultVar = buffer.freshVar();
-    buffer.emit(resultVar + " = phi i32 [ 1, %" + trueLabel + "], [ 0, %" + falseLabel + "]");
-    res->reg = resultVar;
-}
-
 void generateTrueCode(Exp* b) {
         b->reg = buffer.freshReg();
         buffer.emit(b->reg + " = add i32 " + to_string(b->val) + ", 0");
 }
 
 void generateFalseCode(Exp* b) {
-        b->reg = buffer.freshVar();
+        b->reg = buffer.freshReg();
         buffer.emit(b->reg + " = add i32 " + to_string(b->val) + ", 0");
 }
 
-void generateNotCode(Exp* res, const std::string b){
-        res->reg = buffer.freshVar();
-        buffer.emit(res->reg + " = icmp eq i32 " + b + ", 0" );
+void generateNotCode(Exp* res, const std::string operand){
+        res->reg = buffer.freshReg();
+        buffer.emit(res->reg + " = sub i32 1," + operand);
+}
+
+
+BoolOp::BoolOp(Exp op1) : Exp(op1) {
+    trueLabel = buffer.freshLabel();
+    falseLabel = buffer.freshLabel();
+    endLabel = buffer.freshLabel();
+    nextLabel = buffer.freshLabel();
+}
+
+BoolAndOperation::BoolAndOperation(Exp op1) : BoolOp(op1) {}
+
+void BoolAndOperation::emitInitialPart() {
+
+    std::string reg1 = handleExp(this, "Compare"); // Assume implementation exists
+    buffer.emit("br i1 " + reg1 + ", label %" + nextLabel + ", label %" + falseLabel);
+    buffer.emit(nextLabel + ":");
+}
+
+std::string BoolAndOperation::finalizeOperation(Exp* operand2) {
+        std::string reg2 = handleExp(operand2, "Compare");
+        buffer.emit("br i1 " + reg2 + ", label %" + trueLabel + ", label %" + falseLabel);
+
+        // Conclude the operation
+        buffer.emit(trueLabel + ":");
+        buffer.emit("br label %" + endLabel);
+        buffer.emit(falseLabel + ":");
+        buffer.emit("br label %" + endLabel);
+
+        // Merge results using phi
+        buffer.emit(endLabel + ":");
+        std::string resultReg = buffer.freshReg();
+        buffer.emit(resultReg + " = phi i32 [1, %" + trueLabel + "], [0, %" + falseLabel + "]");
+        return resultReg;
+}
+
+BoolOrOperation::BoolOrOperation(Exp op1) : BoolOp(op1) {}
+
+void BoolOrOperation::emitInitialPart() {
+    std::string reg1 = handleExp(this, "Compare");
+    buffer.emit("br i1 " + reg1 + ", label %" + trueLabel + ", label %" + nextLabel);
+    buffer.emit(nextLabel + ":");
+}
+
+std::string BoolOrOperation::finalizeOperation(Exp* operand2) {
+        std::string reg2 = handleExp(operand2, "Compare");
+        buffer.emit("br i1 " + reg2 + ", label %" + trueLabel + ", label %" + falseLabel);
+
+        // Conclude the operation
+        buffer.emit(falseLabel + ":");
+        buffer.emit("br label %" + endLabel);
+        buffer.emit(trueLabel + ":");
+        buffer.emit("br label %" + endLabel);
+
+        // Merge results using phi
+        buffer.emit(endLabel + ":");
+        std::string resultReg = buffer.freshReg();
+        buffer.emit(resultReg + " = phi i32 [1, %" + trueLabel + "], [0, %" + falseLabel + "]");
+        return resultReg;
 }
