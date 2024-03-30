@@ -104,5 +104,10 @@ std::string generateGlobalString(std::string str);
 void generatePrintCode(std::string str, std::string arg);
 void generatePrintiCode(std::string arg);
 std::string generateReadiCode(std::string arg);
+void generateTrueCode(Exp* b);
+void generateFalseCode(Exp* b);
+void generateNotCode(Exp* res, std::string b);
+void generateAndCode(Exp* res, std::string operand1, std::string operand2);
+void generateOrCode(Exp* res, std::string operand1, std::string operand2);
 
 #endif

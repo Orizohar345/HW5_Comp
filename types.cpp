@@ -235,3 +235,72 @@ std::string generateReadiCode(std::string arg) {
         buffer.emit(reg + " = call i32 @readi(i32 " + arg + ")");
         return reg;
 }
+
+void generateAndCode(Exp* res, std::string operand1, std::string operand2){
+    std::string trueLabel = buffer.freshLabel();
+    std::string falseLabel = buffer.freshLabel();
+    std::string endLabel = buffer.freshLabel();
+    std::string label0 = buffer.freshLabel();
+
+    std::string op1 = buffer.freshVar();
+    buffer.emit(op1 + " = icmp eq i32 " + operand1 + ", 0");
+    buffer.emit("br i1 " + op1 + ", label %" + falseLabel + ", label %" + label0);
+
+    buffer.emit(label0 + ":");
+    std::string op2 = buffer.freshVar();
+    buffer.emit(op2 + " = icmp eq i32 " + operand2 + ", 0");
+    buffer.emit("br i1 " + op2 + ", label %" + falseLabel + ", label %" + trueLabel);
+
+    buffer.emit(falseLabel + ":");
+    buffer.emit("br i1 label %" + endLabel);
+
+    buffer.emit(trueLabel + ":");
+    buffer.emit("br i1 label %" + endLabel);
+
+    buffer.emit(endLabel + ":");
+    std::string resultVar = buffer.freshVar();
+    buffer.emit(resultVar + " = phi i32 [ 1, %" + trueLabel + "], [ 0, %" + falseLabel + "]");
+    res->reg = resultVar;
+}
+
+void generateOrCode(Exp* res, std::string operand1, std::string operand2){
+    std::string trueLabel = buffer.freshLabel();
+    std::string falseLabel = buffer.freshLabel();
+    std::string endLabel = buffer.freshLabel();
+    std::string label0 = buffer.freshLabel();
+
+    std::string op1 = buffer.freshVar();
+    buffer.emit(op1 + " = icmp eq i32 " + operand1 + ", 0");
+    buffer.emit("br i1 " + op1 + ", label %" + label0 + ", label %" + trueLabel);
+
+    buffer.emit(label0 + ":");
+    std::string op2 = buffer.freshVar();
+    buffer.emit(op2 + " = icmp eq i32 " + operand2 + ", 0");
+    buffer.emit("br i1 " + op2 + ", label %" + falseLabel + ", label %" + trueLabel);
+
+    buffer.emit(falseLabel + ":");
+    buffer.emit("br i1 label %" + endLabel);
+
+    buffer.emit(trueLabel + ":");
+    buffer.emit("br i1 label %" + endLabel);
+
+    buffer.emit(endLabel + ":");
+    std::string resultVar = buffer.freshVar();
+    buffer.emit(resultVar + " = phi i32 [ 1, %" + trueLabel + "], [ 0, %" + falseLabel + "]");
+    res->reg = resultVar;
+}
+
+void generateTrueCode(Exp* b) {
+        b->reg = buffer.freshReg();
+        buffer.emit(b->reg + " = add i32 " + to_string(b->val) + ", 0");
+}
+
+void generateFalseCode(Exp* b) {
+        b->reg = buffer.freshVar();
+        buffer.emit(b->reg + " = add i32 " + to_string(b->val) + ", 0");
+}
+
+void generateNotCode(Exp* res, const std::string b){
+        res->reg = buffer.freshVar();
+        buffer.emit(res->reg + " = icmp eq i32 " + b + ", 0" );
+}

@@ -229,8 +229,14 @@ Exp : LPAREN Exp RPAREN {
         std::string global_string = generateGlobalString(fixed_string);
         $$ = new Exp(fixed_string, "STRING", global_string, 0, true);
         }
-    | TRUE { $$ = new Exp("", "BOOL", "",1, true); }
-    | FALSE { $$ = new Exp("", "BOOL", "",0, true); }
+    | TRUE {
+        $$ = new Exp("", "BOOL", "",1, true);
+        generateTrueCode(dynamic_cast<Exp*>($$));
+    }
+    | FALSE {
+        $$ = new Exp("", "BOOL", "",0, true);
+        generateFalseCode(dynamic_cast<Exp*>($$));
+        }
     | NOT Exp {
             Exp* exp = dynamic_cast<Exp*>($2);
             if (!exp->is_const && !table_stack.entryExists(exp->text)) {
@@ -242,6 +248,7 @@ Exp : LPAREN Exp RPAREN {
                 exit(1);
             }
             $$ = new Exp("", "BOOL", "",~exp->val, true);
+            generateNotCode(dynamic_cast<Exp*>($$), handleExp(exp));
         }
     | Exp AND Exp {
             Exp* exp1 = dynamic_cast<Exp*>($1);
@@ -264,6 +271,7 @@ Exp : LPAREN Exp RPAREN {
                 exit(1);
             }
             $$ = new Exp("", "BOOL", "" ,exp1->val & exp2->val, true);
+            generateAndCode(dynamic_cast<Exp*>($$),handleExp(exp1), handleExp(exp2));
         }
     | Exp OR Exp {
             Exp* exp1 = dynamic_cast<Exp*>($1);
@@ -290,6 +298,7 @@ Exp : LPAREN Exp RPAREN {
             }
 
             $$ = new Exp("", "BOOL", "",exp1->val | exp2->val, true);
+            generateOrCode(dynamic_cast<Exp*>($$),handleExp(exp1), handleExp(exp2));
         }
     | Exp RELOP_EQ Exp {
             Exp* exp1 = dynamic_cast<Exp*>($1);

@@ -549,8 +549,8 @@ static const yytype_int16 yyrline[] =
        0,    36,    36,    39,    40,    43,    43,    44,    53,    80,
      113,   114,   115,   116,   116,   117,   117,   130,   131,   132,
      135,   158,   159,   160,   163,   171,   187,   203,   210,   214,
-     219,   224,   232,   233,   234,   246,   268,   290,   305,   319,
-     339,   354
+     219,   224,   232,   236,   240,   253,   276,   303,   320,   336,
+     357,   372
 };
 #endif
 
@@ -1507,18 +1507,24 @@ yyreduce:
 
   case 32: /* Exp: TRUE  */
 #line 232 "parser.ypp"
-           { yyval = new Exp("", "BOOL", "",1, true); }
-#line 1512 "parser.tab.cpp"
+           {
+        yyval = new Exp("", "BOOL", "",1, true);
+        generateTrueCode(dynamic_cast<Exp*>(yyval));
+    }
+#line 1515 "parser.tab.cpp"
     break;
 
   case 33: /* Exp: FALSE  */
-#line 233 "parser.ypp"
-            { yyval = new Exp("", "BOOL", "",0, true); }
-#line 1518 "parser.tab.cpp"
+#line 236 "parser.ypp"
+            {
+        yyval = new Exp("", "BOOL", "",0, true);
+        generateFalseCode(dynamic_cast<Exp*>(yyval));
+        }
+#line 1524 "parser.tab.cpp"
     break;
 
   case 34: /* Exp: NOT Exp  */
-#line 234 "parser.ypp"
+#line 240 "parser.ypp"
               {
             Exp* exp = dynamic_cast<Exp*>(yyvsp[0]);
             if (!exp->is_const && !table_stack.entryExists(exp->text)) {
@@ -1530,12 +1536,13 @@ yyreduce:
                 exit(1);
             }
             yyval = new Exp("", "BOOL", "",~exp->val, true);
+            generateNotCode(dynamic_cast<Exp*>(yyval), handleExp(exp));
         }
-#line 1535 "parser.tab.cpp"
+#line 1542 "parser.tab.cpp"
     break;
 
   case 35: /* Exp: Exp AND Exp  */
-#line 246 "parser.ypp"
+#line 253 "parser.ypp"
                   {
             Exp* exp1 = dynamic_cast<Exp*>(yyvsp[-2]);
             Exp* exp2 = dynamic_cast<Exp*>(yyvsp[0]);
@@ -1557,19 +1564,22 @@ yyreduce:
                 exit(1);
             }
             yyval = new Exp("", "BOOL", "" ,exp1->val & exp2->val, true);
+            generateAndCode(dynamic_cast<Exp*>(yyval),handleExp(exp1), handleExp(exp2));
         }
-#line 1562 "parser.tab.cpp"
+#line 1570 "parser.tab.cpp"
     break;
 
   case 36: /* Exp: Exp OR Exp  */
-#line 268 "parser.ypp"
+#line 276 "parser.ypp"
                  {
             Exp* exp1 = dynamic_cast<Exp*>(yyvsp[-2]);
             Exp* exp2 = dynamic_cast<Exp*>(yyvsp[0]);
+
             if (!exp1->is_const && !table_stack.entryExists(exp1->text)) {
                 output::errorUndef(yylineno, exp1->text);
                 exit(1);
             }
+
             if (!exp2->is_const && !table_stack.entryExists(exp2->text)) {
                 output::errorUndef(yylineno, exp2->text);
                 exit(1);
@@ -1579,24 +1589,29 @@ yyreduce:
                 output::errorMismatch(yylineno);
                 exit(1);
             }
+
             if (exp2->type != "BOOL") {
                 output::errorMismatch(yylineno);
                 exit(1);
             }
+
             yyval = new Exp("", "BOOL", "",exp1->val | exp2->val, true);
+            generateOrCode(dynamic_cast<Exp*>(yyval),handleExp(exp1), handleExp(exp2));
         }
-#line 1589 "parser.tab.cpp"
+#line 1602 "parser.tab.cpp"
     break;
 
   case 37: /* Exp: Exp RELOP_EQ Exp  */
-#line 290 "parser.ypp"
+#line 303 "parser.ypp"
                        {
             Exp* exp1 = dynamic_cast<Exp*>(yyvsp[-2]);
             Exp* exp2 = dynamic_cast<Exp*>(yyvsp[0]);
+
             if (!exp1->is_const && !table_stack.entryExists(exp1->text)) {
                 output::errorUndef(yylineno, exp1->text);
                 exit(1);
             }
+
             if (!exp2->is_const && !table_stack.entryExists(exp2->text)) {
                 output::errorUndef(yylineno, exp2->text);
                 exit(1);
@@ -1605,18 +1620,20 @@ yyreduce:
             verifyNumeric(exp1->type, exp2->type, yylineno);
             yyval = new Exp("", "BOOL", "", 0, true);
         }
-#line 1609 "parser.tab.cpp"
+#line 1624 "parser.tab.cpp"
     break;
 
   case 38: /* Exp: Exp RELOP_REL Exp  */
-#line 305 "parser.ypp"
+#line 320 "parser.ypp"
                         {
             Exp* exp1 = dynamic_cast<Exp*>(yyvsp[-2]);
             Exp* exp2 = dynamic_cast<Exp*>(yyvsp[0]);
+
             if (!exp1->is_const && !table_stack.entryExists(exp1->text)) {
                 output::errorUndef(yylineno, exp1->text);
                 exit(1);
             }
+
             if (!exp2->is_const && !table_stack.entryExists(exp2->text)) {
                 output::errorUndef(yylineno, exp2->text);
                 exit(1);
@@ -1624,14 +1641,15 @@ yyreduce:
             verifyNumeric(exp1->type, exp2->type, yylineno);
             yyval = new Exp("", "BOOL", "",0, true);
         }
-#line 1628 "parser.tab.cpp"
+#line 1645 "parser.tab.cpp"
     break;
 
   case 39: /* Exp: LPAREN Type RPAREN Exp  */
-#line 319 "parser.ypp"
+#line 336 "parser.ypp"
                              {
             Exp* exp = dynamic_cast<Exp*>(yyvsp[0]);
             int val = exp->val;
+
             if (!exp->is_const && !table_stack.entryExists(exp->text)) {
                 output::errorUndef(yylineno, exp->text);
                 exit(1);
@@ -1647,11 +1665,11 @@ yyreduce:
             else
                 generateNumCode(exp);
         }
-#line 1651 "parser.tab.cpp"
+#line 1669 "parser.tab.cpp"
     break;
 
   case 40: /* M1: Exp  */
-#line 339 "parser.ypp"
+#line 357 "parser.ypp"
             {
                     Exp* exp = dynamic_cast<Exp*>(yyvsp[0]);
                     if ((!exp->is_const && !table_stack.entryExists(exp->text)) || table_stack.entryExists(exp->text)) {
@@ -1665,17 +1683,17 @@ yyreduce:
                     table_stack.addNewTable();
                     yyval = new Exp(exp->text, exp->type, "",exp->val, exp->is_const);
             }
-#line 1669 "parser.tab.cpp"
+#line 1687 "parser.tab.cpp"
     break;
 
   case 41: /* M2: %empty  */
-#line 354 "parser.ypp"
+#line 372 "parser.ypp"
      { table_stack.removeTopTable(); }
-#line 1675 "parser.tab.cpp"
+#line 1693 "parser.tab.cpp"
     break;
 
 
-#line 1679 "parser.tab.cpp"
+#line 1697 "parser.tab.cpp"
 
       default: break;
     }
@@ -1868,7 +1886,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 357 "parser.ypp"
+#line 375 "parser.ypp"
 
 
 int main()
