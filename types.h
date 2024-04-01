@@ -137,6 +137,15 @@ public:
     std::string finalizeOperation(Exp* operand2) override;
 };
 
+class WhileOp : public Node {
+public:
+    std::string startLabel, insideLabel, continueLabel;
+
+    WhileOp(Node node);
+    void generateInsideCode(std::string reg);
+    void generateContinueCode();
+};
+
 
 void verifyNumeric(std::string type1, std::string type2, int lineno);
 std::string verifyBinop(std::string type1, std::string type2, int lineno);

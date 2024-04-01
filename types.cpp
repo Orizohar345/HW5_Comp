@@ -367,6 +367,23 @@ std::string BoolOrOperation::finalizeOperation(Exp* operand2) {
         return resultReg;
 }
 
+WhileOp::WhileOp(Node node) : Node(node) {
+    startLabel = buffer.freshLabel();
+    insideLabel = buffer.freshLabel();
+    continueLabel = buffer.freshLabel();
+    buffer.emit("br label %" + startLabel);
+    buffer.emit(startLabel + ":");
+}
+
+void WhileOp::generateInsideCode(std::string reg) {
+        buffer.emit("br i1 " + reg + ", label %" + insideLabel +", label %" + continueLabel);
+        buffer.emit(insideLabel + ":");
+}
+
+void WhileOp::generateContinueCode() {
+        buffer.emit("br label %" + startLabel);
+        buffer.emit(continueLabel + ":");
+}
 
 void generateRelopEqCode(Exp *res, std::string operand1, std::string operand2, const std::string& op){
         std::string tmp = buffer.freshReg();

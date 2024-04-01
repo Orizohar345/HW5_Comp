@@ -18,6 +18,7 @@
 
     Exp* globalExp;
     Exp* globalIfElse;
+    std::vector<WhileOp *> whileOpList;
 
 %}
 
@@ -132,7 +133,7 @@ Statement : LBRACE { table_stack.addNewTable(); } Statements RBRACE { table_stac
             exp1->exitOperation();
 
            }
-          | WHILE LPAREN Exp RPAREN {
+          | WHILE_MARKER LPAREN Exp RPAREN {
                 Exp* exp = dynamic_cast<Exp*>($3);
                 if ((!exp->is_const && !table_stack.entryExists(exp->text))) {
                     output::errorUndef(yylineno, exp->text);
@@ -144,9 +145,24 @@ Statement : LBRACE { table_stack.addNewTable(); } Statements RBRACE { table_stac
                 }
                 table_stack.addNewTable();
                 table_stack.addToTopTable(Entry("WHILE", "WHILE"), true);
-            } Statement {table_stack.removeTopTable(); }
-          | BREAK SC { if (!table_stack.entryExists("WHILE")) { output::errorUnexpectedBreak(yylineno); exit(1); } }
-          | CONTINUE SC { if (!table_stack.entryExists("WHILE")) { output::errorUnexpectedContinue(yylineno); exit(1); } }
+                dynamic_cast<WhileOp *>($1)->generateInsideCode(handleExp(exp, "Compare"));
+            } Statement {table_stack.removeTopTable(); dynamic_cast<WhileOp *>($1)->generateContinueCode(); whileOpList.pop_back();}
+          | BREAK SC {
+             if (!table_stack.entryExists("WHILE")) {
+                output::errorUnexpectedBreak(yylineno);
+                exit(1);
+                }
+                WhileOp *while_op = whileOpList.back();
+                buffer.emit("br label %" + while_op->continueLabel);
+                }
+          | CONTINUE SC {
+                if (!table_stack.entryExists("WHILE")) {
+                    output::errorUnexpectedContinue(yylineno);
+                    exit(1);
+                }
+                WhileOp *while_op = whileOpList.back();
+                buffer.emit("br label %" + while_op->startLabel);
+            }
           | SC {output::errorSyn(yylineno); exit(1);}
           ;
 
@@ -414,8 +430,7 @@ M1 : Exp    {
    ;
 
 
-M2 : { table_stack.removeTopTable();
-}
+M2 : { table_stack.removeTopTable(); }
    ;
 
 
@@ -431,7 +446,10 @@ AND_MARKER : {
         $$ = andOp;
     }
     ;
-
+WHILE_MARKER : WHILE {
+    $$ = new WhileOp(*$1);
+    whileOpList.push_back(dynamic_cast<WhileOp *>($$));
+}
 
 %%
 
