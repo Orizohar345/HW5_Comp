@@ -107,6 +107,35 @@ public:
     std::string finalizeOperation(Exp* operand2) override;
 };
 
+class IfOp : public Exp {
+public:
+    std::string endLabel, nextLabel, exitLabel;
+    bool is_else;
+    IfOp(Exp op1);
+    void emitInitialPart();
+    void finalizeOperation();
+    void exitOperation();
+    void emitMiddle();
+
+};
+
+class IfElseOp : public Exp {
+public:
+    std::string trueLabel, falseLabel, endLabel;
+
+    IfElseOp(Exp op1);
+    void emitInitialPart();
+    void emitMiddle();
+    void finalizeOperation();
+};
+
+
+class BoolIfOperation : public BoolOp {
+public:
+    BoolIfOperation(Exp op1);
+    void emitInitialPart() override;
+    std::string finalizeOperation(Exp* operand2) override;
+};
 
 
 void verifyNumeric(std::string type1, std::string type2, int lineno);
@@ -131,5 +160,7 @@ std::string generateReadiCode(std::string arg);
 void generateTrueCode(Exp* b);
 void generateFalseCode(Exp* b);
 void generateNotCode(Exp* res, std::string operand);
+void generateRelopEqCode(Exp *res, std::string operand1, std::string operand2, const std::string& op);
+void generateRelopRelCode(Exp *res, std::string operand1, std::string operand2, const std::string& op);
 
 #endif

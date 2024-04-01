@@ -190,7 +190,6 @@ void generateFuncUsageCode(const std::string& func_name, const std::string& arg)
 std::string handleExp(Exp* exp, std::string boolCompare) {
         std::string ret;
         if (exp->is_const) {
-        // If the expression is a constant, just return its associated variable name
                 ret = exp->reg;
         } else {
                 std::string var = generateLoad(exp->text);
@@ -200,7 +199,6 @@ std::string handleExp(Exp* exp, std::string boolCompare) {
         }
 
         if (exp->type == "BOOL" && boolCompare == "Compare") {
-                // For boolean expressions, truncate the i32 value to i1
                 std::string boolReg = buffer.freshReg(); // Generate a fresh register for the boolean result
                 buffer.emit(boolReg + " = trunc i32 " + ret + " to i1"); // Perform the truncation
                 ret = boolReg;
@@ -247,6 +245,7 @@ std::string generateReadiCode(std::string arg) {
 }
 
 void generateTrueCode(Exp* b) {
+      //  buffer.emit("generateTrueCode");
         b->reg = buffer.freshReg();
         buffer.emit(b->reg + " = add i32 " + to_string(b->val) + ", 0");
 }
@@ -267,6 +266,54 @@ BoolOp::BoolOp(Exp op1) : Exp(op1) {
     falseLabel = buffer.freshLabel();
     endLabel = buffer.freshLabel();
     nextLabel = buffer.freshLabel();
+}
+
+IfOp::IfOp(Exp op1) : Exp(op1) {
+        nextLabel = buffer.freshLabel();
+        endLabel = buffer.freshLabel();
+        exitLabel = buffer.freshLabel();
+}
+
+IfElseOp::IfElseOp(Exp op1) : Exp(op1){
+        trueLabel = buffer.freshLabel();
+        falseLabel = buffer.freshLabel();
+        endLabel = buffer.freshLabel();
+}
+
+void IfElseOp::emitInitialPart(){
+
+    std::string reg1 = handleExp(this, "Compare"); // Assume implementation exists
+    buffer.emit("br i1 " + reg1 +  ", label %" + trueLabel + ", label %" + falseLabel);
+    buffer.emit(trueLabel + ":");
+}
+
+void IfOp::emitInitialPart(){
+
+    std::string reg1 = handleExp(this, "Compare"); // Assume implementation exists
+    buffer.emit("br i1 " + reg1 +  ", label %" + nextLabel + ", label %" + endLabel);
+    buffer.emit(nextLabel + ":");
+}
+
+void IfOp::emitMiddle(){
+        buffer.emit("br label %" + exitLabel);
+        buffer.emit(endLabel + ":");
+}
+
+void IfOp::finalizeOperation(){
+        buffer.emit("br label %" + endLabel);
+        buffer.emit(endLabel + ":");
+}
+
+void IfOp::exitOperation(){
+   //     buffer.emit("in exit");
+        buffer.emit("br label %" + exitLabel);
+        buffer.emit(exitLabel + ":");
+}
+
+
+void IfElseOp::finalizeOperation(){
+        buffer.emit("br label %" + endLabel);
+        buffer.emit(endLabel + ":");
 }
 
 BoolAndOperation::BoolAndOperation(Exp op1) : BoolOp(op1) {}
@@ -318,4 +365,38 @@ std::string BoolOrOperation::finalizeOperation(Exp* operand2) {
         std::string resultReg = buffer.freshReg();
         buffer.emit(resultReg + " = phi i32 [1, %" + trueLabel + "], [0, %" + falseLabel + "]");
         return resultReg;
+}
+
+
+void generateRelopEqCode(Exp *res, std::string operand1, std::string operand2, const std::string& op){
+        std::string tmp = buffer.freshReg();
+        std::string resultreg = buffer.freshReg();
+        if (op == "=="){
+                buffer.emit(tmp + " = icmp eq i32 " + operand1 + ", " + operand2);
+        }
+        else{
+                buffer.emit(tmp + " = icmp ne i32 " + operand1 + ", " + operand2);
+        }
+        buffer.emit(resultreg + " = zext i1 " + tmp + " to i32" );
+        res->reg = resultreg;
+}
+
+void generateRelopRelCode(Exp *res, std::string operand1, std::string operand2, const std::string& op){
+     //   std::string check = buffer.freshVar();
+        std::string tmp = buffer.freshReg();
+        std::string resultreg = buffer.freshReg();
+        if (op == "<"){
+                buffer.emit(tmp + " = icmp slt i32 " + operand1 + ", " + operand2);
+        }
+        else if (op == ">"){
+                buffer.emit(tmp + " = icmp sgt i32 " + operand1 + ", " + operand2);
+        }
+        else if (op == ">="){
+                buffer.emit(tmp + " = icmp sge i32 " + operand1 + ", " + operand2);
+        }
+        else {
+                buffer.emit(tmp + " = icmp sle i32 " + operand1 + ", " + operand2);
+        }
+        buffer.emit(resultreg + " = zext i1 " + tmp + " to i32" );
+        res->reg = resultreg;
 }

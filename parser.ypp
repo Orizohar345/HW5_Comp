@@ -17,6 +17,7 @@
     CodeBuffer buffer;
 
     Exp* globalExp;
+    Exp* globalIfElse;
 
 %}
 
@@ -112,10 +113,25 @@ Statement : LBRACE { table_stack.addNewTable(); } Statements RBRACE { table_stac
 
                 table_stack.entryChangeVal($1->text, exp->val);
             }
-          | Call SC {}
-          | RETURN SC {}
-          | IF LPAREN M1 RPAREN Statement M2
-          | IF LPAREN M1 RPAREN Statement M2 ELSE { table_stack.addNewTable(); } Statement { table_stack.removeTopTable(); }
+          | Call SC {
+            }
+          | RETURN SC {
+            }
+          | IF LPAREN M1 RPAREN Statement M2 {
+
+                IfOp* exp1 = dynamic_cast<IfOp*>($3);
+                exp1->finalizeOperation();
+            }
+          | IF LPAREN M1 RPAREN Statement M2 ELSE {
+             table_stack.addNewTable();
+             IfOp* exp1 = dynamic_cast<IfOp*>($3);
+             exp1->emitMiddle();
+             } Statement {
+            table_stack.removeTopTable();
+            IfOp* exp1 = dynamic_cast<IfOp*>($3);
+            exp1->exitOperation();
+
+           }
           | WHILE LPAREN Exp RPAREN {
                 Exp* exp = dynamic_cast<Exp*>($3);
                 if ((!exp->is_const && !table_stack.entryExists(exp->text))) {
@@ -135,6 +151,7 @@ Statement : LBRACE { table_stack.addNewTable(); } Statements RBRACE { table_stac
           ;
 
 Call : ID LPAREN Exp RPAREN {
+
             Exp* exp = dynamic_cast<Exp*>($3);
             if (!exp->is_const && !table_stack.entryExists(exp->text)) {
                 output::errorUndef(yylineno, exp->text);
@@ -157,9 +174,12 @@ Call : ID LPAREN Exp RPAREN {
             }
         }
      ;
-Type : INT { $$ = new Type("INT");}
-     | BOOL { $$ = new Type("BOOL"); }
-     | BYTE { $$ = new Type("BYTE"); }
+Type : INT { $$ = new Type("INT");
+}
+     | BOOL { $$ = new Type("BOOL");
+      }
+     | BYTE { $$ = new Type("BYTE");
+     }
      ;
 
 Exp : LPAREN Exp RPAREN {
@@ -209,8 +229,9 @@ Exp : LPAREN Exp RPAREN {
         if (table_stack.entryExists($1->text)) {
             Entry entry = table_stack.getEntry($1->text);
             $$ = new Exp($1->text, entry.type, "",entry.val, false);
-        } else
+        } else{
             $$ = new Exp($1->text, "", "",0, false);
+        }
         globalExp = dynamic_cast<Exp*>($$);
         }
     | Call {
@@ -330,6 +351,7 @@ Exp : LPAREN Exp RPAREN {
 
             verifyNumeric(exp1->type, exp2->type, yylineno);
             $$ = new Exp("", "BOOL", "", 0, true);
+            generateRelopEqCode(dynamic_cast<Exp*>($$),handleExp(exp1), handleExp(exp2), $2->text);
             globalExp = dynamic_cast<Exp*>($$);
         }
     | Exp RELOP_REL Exp {
@@ -347,6 +369,7 @@ Exp : LPAREN Exp RPAREN {
             }
             verifyNumeric(exp1->type, exp2->type, yylineno);
             $$ = new Exp("", "BOOL", "",0, true);
+            generateRelopRelCode(dynamic_cast<Exp*>($$),handleExp(exp1), handleExp(exp2), $2->text);
             globalExp = dynamic_cast<Exp*>($$);
         }
     | LPAREN Type RPAREN Exp {
@@ -372,8 +395,8 @@ Exp : LPAREN Exp RPAREN {
     ;
 
 M1 : Exp    {
-                    Exp* exp = dynamic_cast<Exp*>($1);
-                    if ((!exp->is_const && !table_stack.entryExists(exp->text)) || table_stack.entryExists(exp->text)) {
+                    Exp* exp = dynamic_cast<Exp*>(globalExp);
+                    if ((!exp->is_const && !table_stack.entryExists(exp->text))) {
                         output::errorUndef(yylineno, exp->text);
                         exit(1);
                     }
@@ -382,12 +405,19 @@ M1 : Exp    {
                         exit(1);
                     }
                     table_stack.addNewTable();
-                    $$ = new Exp(exp->text, exp->type, "",exp->val, exp->is_const);
+                    IfOp *ifOp = new IfOp(*globalExp);
+                    ifOp->emitInitialPart();
+                    $$ = ifOp;
+
+
             }
    ;
 
-M2 : { table_stack.removeTopTable(); }
+
+M2 : { table_stack.removeTopTable();
+}
    ;
+
 
 OR_MARKER : {
         BoolOrOperation *orOp = new BoolOrOperation(*globalExp);
@@ -401,6 +431,7 @@ AND_MARKER : {
         $$ = andOp;
     }
     ;
+
 
 %%
 
