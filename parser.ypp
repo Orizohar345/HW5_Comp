@@ -116,8 +116,7 @@ Statement : LBRACE { table_stack.addNewTable(); } Statements RBRACE { table_stac
             }
           | Call SC {
             }
-          | RETURN SC {
-            }
+          | RETURN SC {  buffer.emit("ret i32 0"); }
           | IF LPAREN M1 RPAREN Statement M2 {
 
                 IfOp* exp1 = dynamic_cast<IfOp*>($3);
@@ -400,12 +399,12 @@ Exp : LPAREN Exp RPAREN {
             if ($2->text == "BYTE" && exp->val > 255) {
                 val = val & 255;
             }
-            $$ = new Exp("", $2->text,"", val, true);
 
             if ($2->text == "BYTE")
                 generateNumByteCode(exp);
             else
                 generateNumCode(exp);
+            $$ = new Exp("", $2->text, exp->reg, val, true);
             globalExp = dynamic_cast<Exp*>($$);
         }
     ;
